@@ -19,6 +19,7 @@ class.objMt = {
 
 class.texture = tImages.blankTile
 class.type = "blank"
+class.char = " "
 
 --public methods 
 function class:enter(entity,nMotionX,nMotionY)

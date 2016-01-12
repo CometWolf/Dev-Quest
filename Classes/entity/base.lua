@@ -30,7 +30,7 @@ function class:render(nX,nY,parent)
   end
 end
 
-function class:tryMove(nColumn, nRow, bAbsolute)
+function class:checkMove(nColumn, nRow, bAbsolute)
   if bAbsolute then
     nRow = nRow > 0 and nRow or 1
     nColumn = nColumn > 0 and nColumn or 1
@@ -41,8 +41,8 @@ function class:tryMove(nColumn, nRow, bAbsolute)
   return board[nColumn][nRow]:enter(self),nColumn,nRow
 end
 
-function class:doMove(nColumn, nRow, bAbsolute)
-  local move, column, row = self:tryMove(nColumn, nRow, bAbsolute)
+function class:tryMove(nColumn, nRow, bAbsolute)
+  local move, column, row = self:checkMove(nColumn, nRow, bAbsolute)
   if move then
     self:move(column,row)
     return true

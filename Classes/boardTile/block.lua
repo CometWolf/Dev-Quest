@@ -17,8 +17,9 @@ class.objMt = {
   end
 }
 
-class.texture = tImages.blankTile
-class.type = "wall"
+class.texture = tImages.blockTile
+class.type = "block"
+class.char = "x"
 
 --public methods 
 function class:enter(entity,nMotionX,nMotionY)

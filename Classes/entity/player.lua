@@ -42,8 +42,6 @@ function class:move(nColumn, nRow)
     end
     self.column = nColumn
   end
-  print(nColumn)
-  print(nRow)
   self.onTile = board.group[nColumn][nRow]
 end
 

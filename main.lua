@@ -15,15 +15,36 @@ Game file loading
 --------------------------------------------------------------------------------]]
 tClasses = {}
 tImages = {}
+tLevels = {}
 do
   local classFolder = "Classes"
   local imageFolder = "Images"
+  local levelFolder = "Levels"
   local lfs = require("lfs")
+
+  local findFiles
+  findFiles = function(sPath,tTable)
+    for fileName in lfs.dir(sPath) do
+      if fileName ~= "." and fileName ~= ".." then --why the hell does it return "." and ".."!?
+        local filePath = sPath.."/"..fileName
+        if lfs.attributes(filePath,"mode") == "directory" then
+          tTable[fileName] = {}
+          findImages(filePath,tTable[fileName])
+        else
+          fileName = fileName:match("(.-)%..-$")
+          local num = tonumber(fileName)
+          print(fileName)
+          tTable[num and num or fileName] = filePath
+        end
+      end
+    end
+  end
+  findFiles(levelFolder,tLevels)
 
   local findImages
   findImages = function(sPath,tTable)
     for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then --why the hell does it return "." and ".."!?
+      if fileName ~= "." and fileName ~= ".." then
         local filePath = sPath.."/"..fileName
         if lfs.attributes(filePath,"mode") == "directory" then
           tTable[fileName] = {}
@@ -142,8 +163,37 @@ end
 --[[------------------------------------------------------------------------------
 Play board
 --------------------------------------------------------------------------------]]
+do
+  local tTileChar = {}
+  for k,v in pairs(tClasses.boardTile) do
+    if v.char then
+      tTileChar[v.char] = v
+    end
+  end
+
+  function loadBoard(sPath)
+    local file,err = io.open(sPath)
+    if not file then
+      error(err)
+    end
+    local load = {}
+    local i = 1
+    for line in file:lines() do
+      load[i] = {}
+      local j = 1
+      for char in line:gmatch"." do
+        load[i][j] = tTileChar[char]
+        j = j+1
+      end
+      i = i+1
+    end
+    return load
+  end
+end
+
+board = loadBoard(tLevels[1])
+
 --calculate playboard
-board = {}
 do
   local width = screen.width-gui.controlLeft.width-gui.controlRight.width
   local height = screen.height-gui.statusBar.height
@@ -166,6 +216,8 @@ do
   }
   board.tileWidth = tileWidth
   board.tileHeight = tileHeight
+  board.columns = #board
+  board.rows = #board[1]
   tClasses.boardTile.base.width = tileWidth
   tClasses.boardTile.base.height = tileHeight
 end
@@ -178,12 +230,9 @@ do
   local tileClass = tClasses.boardTile.blank
   local width = tClasses.boardTile.base.width
   local height = tClasses.boardTile.base.height
-  for iC = 1,board.view.columns do
-    board[iC] = {
-      [0] = {}
-    }
-    for iR = 1,board.view.rows do
-      local tile = tileClass:new()
+  for iC = 1,board.columns do
+    for iR = 1,board.rows do
+      local tile = board[iC][iR]:new()
       tile:render((iC-1)*width, (iR-1)*height, board.group)
       board[iC][iR] = tile
     end
@@ -191,7 +240,7 @@ do
 end
 
 --Render player
-player = tClasses.entity.player:new(1,1)
+player = tClasses.entity.player:new(2,2)
 player:render(nil,nil,board.container)
 
 --[[------------------------------------------------------------------------------
@@ -201,7 +250,7 @@ gui.controlRight.button2:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:doMove(1,0)
+      player:tryMove(1,0)
     end
   end
 )
@@ -209,7 +258,7 @@ gui.controlLeft.button2:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:doMove(-1,0)
+      player:tryMove(-1,0)
     end
   end
 )
@@ -217,7 +266,7 @@ gui.controlLeft.button1:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:doMove(0,-1)
+      player:tryMove(0,-1)
     end
   end
 )
@@ -225,7 +274,7 @@ gui.controlLeft.button3:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:doMove(0,1)
+      player:tryMove(0,1)
     end
   end
 )
@@ -233,7 +282,7 @@ gui.controlRight.button1:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:doMove(0,-1)
+      player:tryMove(0,-1)
     end
   end
 )
@@ -241,7 +290,7 @@ gui.controlRight.button3:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:doMove(0,1)
+      player:tryMove(0,1)
     end
   end
 )
