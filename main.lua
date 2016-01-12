@@ -20,12 +20,30 @@ do
   local imageFolder = "Images"
   local lfs = require("lfs")
 
+  local findImages
+  findImages = function(sPath,tTable)
+    for fileName in lfs.dir(sPath) do
+      if fileName ~= "." and fileName ~= ".." then --why the hell does it return "." and ".."!?
+        local filePath = sPath.."/"..fileName
+        if lfs.attributes(filePath,"mode") == "directory" then
+          tTable[fileName] = {}
+          findImages(filePath,tTable[fileName])
+        else
+          fileName = fileName:match("(.-)[@%dx]*%..-$")  --strip file extension and resolution prefix
+          print(fileName)
+          tTable[fileName] = filePath
+        end
+      end
+    end
+  end
+  findImages(imageFolder,tImages)
+
   local loadClass
   loadClass = function(sPath,tTable)
     local tFile = {}
     local tDir = {}
     for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then  --why the hell does it return "." and ".."!?
+      if fileName ~= "." and fileName ~= ".." then  
         local filePath = sPath.."/"..fileName
         if lfs.attributes(filePath,"mode") == "directory" then
           tDir[fileName] = filePath
@@ -49,22 +67,6 @@ do
     end
   end
   loadClass(classFolder,tClasses)
-
-  local findImages
-  findImages = function(sPath,tTable)
-    for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then
-        local filePath = sPath.."/"..fileName
-        if lfs.attributes(filePath,"mode") == "directory" then
-          tTable[fileName] = {}
-          findImages(filePath,tTable[fileName])
-        else
-          tTable[fileName:match("(.+)%..-$")] = filePath
-        end
-      end
-    end
-  end
-  findImages(imageFolder,tImages)
 end
 
 --[[------------------------------------------------------------------------------
@@ -88,6 +90,8 @@ do
     return math.round(nInch*pointsPerInch)
   end
 end
+
+print("Scale factor: "..(display.pixelHeight / display.actualContentHeight))
 
 --[[------------------------------------------------------------------------------
 GUI
@@ -120,7 +124,6 @@ do
 --buttons
   local buttonHeight = screen.mmToPoints(12)
   local buttonWidth = screen.mmToPoints(8)
-  print(buttonWidth.."x"..buttonHeight)
   local buttonX = math.round(controlWidth/2)
   local buttonOffsetY = buttonHeight+screen.mmToPoints(3)
   local controlMiddle = math.round(controlHeight/2)
@@ -157,40 +160,42 @@ do
   local unusedX = math.floor(width%(tileWidth))
   local unusedY = math.floor(height%(tileHeight))
   board.container = display.newContainer(tileWidth*columns, tileHeight*rows)
-  board.container.x = gui.controlLeft.edgeX+1+math.floor(unusedX/2)
-  board.container.y = gui.statusBar.bottomY+1+math.floor(unusedY/2)
+  board.container:toBack()
+  board.container.x = gui.controlLeft.edgeX+math.floor(unusedX/2)
+  board.container.y = gui.statusBar.bottomY+math.floor(unusedY/2)
   board.container.anchorChildren = false
   board.view = {
     rows = rows,
     columns = columns,
-    middleRow = math.floor(rows/2),
-    middleColumn = math.floor(columns/2),
-    playerRowOffset = 0,
-    playerColumnOffset = 0,
-    scrollRow = 0,
-    scrollColumn = 0,
+    middleRow = math.floor(rows/2)+1,
+    middleColumn = math.floor(columns/2)+1,
   }
   board.tileWidth = tileWidth
   board.tileHeight = tileHeight
   tClasses.boardTile.base.width = tileWidth
   tClasses.boardTile.base.height = tileHeight
+  print(tileHeight)
+  print(tileWidth)
+  print(screen.width)
 end
 
 --Render play board
 board.group = display.newGroup()
-board.group.x = board.container.x
-board.group.y = board.container.y
+board.container:insert(board.group)
 board.group.anchorChildren = true
-for iC = 0,board.view.columns-1 do
-  board[iC] = {}
-  for iR = 0,board.view.rows-1 do
-    local tile = tClasses.boardTile.blank.new(iC*(tClasses.boardTile.base.width), iR*(tClasses.boardTile.base.height))
-    board[iC][iR] = tile
-    board.group:insert(tile.disp)
+do
+  local newTile = tClasses.boardTile.blank.new
+  local width = tClasses.boardTile.base.width
+  local height = tClasses.boardTile.base.height
+  for iC = 0,board.view.columns-1 do
+    board[iC] = {}
+    for iR = 0,board.view.rows-1 do
+      local tile = newTile(iC*width, iR*height)
+      board[iC][iR] = tile
+      board.group:insert(tile.disp)
+    end
   end
 end
-board.container:toBack()
-board.group:toBack()
 
 --Render player
 board.player = display.newImage(board.container, tImages.player, 0, 0)
@@ -205,8 +210,8 @@ debugText.fill = {0}
 local movePlayer = function(nColumn, nRow, bAbsolute)
   local newRow, newColumn
   if bAbsolute then
-    newRow = math.max(1, nRow)
-    newColumn = math.max(1, nColumn)
+    newRow = nRow > 0 and nRow or 1
+    newColumn = nColumn > 0 and nColumn or 1
   else
     newRow = math.max(1, board.player.row + nRow)
     newColumn = math.max(1, board.player.column + nColumn)
@@ -214,20 +219,20 @@ local movePlayer = function(nColumn, nRow, bAbsolute)
   if newRow ~= board.player.row then
     if newRow <= board.view.middleRow then
       board.player.y = (newRow-1)*board.tileHeight
-      board.group.y = board.container.y
+      board.group.y = 0
     else
       board.player.y = (board.view.middleRow-1)*board.tileHeight
-      board.group.y = (newRow-board.view.middleRow)*board.tileHeight+board.container.x
+      board.group.y = (board.view.middleRow-newRow)*board.tileHeight
     end
     board.player.row = newRow
   end
   if newColumn ~= board.player.column then
     if newColumn <= board.view.middleColumn then
       board.player.x = (newColumn-1)*board.tileWidth
-      board.group.x = board.container.x
+      board.group.x = 0
     else
       board.player.x = (board.view.middleColumn-1)*board.tileWidth
-      board.group.x = (newColumn-board.view.middleColumn)*board.tileWidth+board.container.x
+      board.group.x = (board.view.middleColumn-newColumn)*board.tileWidth
     end
     board.player.column = newColumn
   end

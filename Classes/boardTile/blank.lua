@@ -20,7 +20,10 @@ local objMt = {
 }
 
 local dispProp = {
-  fill = {0.8}, --lightGray
+  fill = {
+    type = "image",
+    filename = tImages.blankTile
+  }
 }
 
 --Public variables
