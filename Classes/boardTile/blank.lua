@@ -2,11 +2,11 @@
 
 --Inheritance
 
-local class = setmetatable({},{__index = tClasses.boardTile.base})
+local class = tClasses.boardTile.base:new()
 
---Private variables
+--Public properties
 
-local objMt = {
+class.objMt = {
   __index = function(t,k)
     return t.disp[k] or class[k]
   end,
@@ -19,32 +19,7 @@ local objMt = {
   end
 }
 
-local dispProp = {
-  fill = {
-    type = "image",
-    filename = tImages.blankTile
-  }
-}
-
---Public variables
-
+class.texture = tImages.blankTile
 class.type = "blank"
-
---Object creation
-
-class.new = function(...)
-  local parent,nX,nY
-  local object = tClasses.boardTile.base.new()
-  if type(arg[1]) == "number" then
-    object.disp = display.newRect(arg[1],arg[2],object.width,object.height)
-  else
-    object.disp = display.newRect(arg[1],arg[2],arg[3],object.width,object.height)
-  end
-  for k,v in pairs(dispProp) do
-    object.disp[k] = v
-  end
-  setmetatable(object,objMt)
-  return object
-end
 
 return class

@@ -29,9 +29,7 @@ do
           tTable[fileName] = {}
           findImages(filePath,tTable[fileName])
         else
-          fileName = fileName:match("(.-)[@%dx]*%..-$")  --strip file extension and resolution prefix
-          print(fileName)
-          tTable[fileName] = filePath
+          tTable[fileName:match("(.-)[@%dx]*%..-$")] = filePath --strip file extension and resolution prefix
         end
       end
     end
@@ -90,8 +88,6 @@ do
     return math.round(nInch*pointsPerInch)
   end
 end
-
-print("Scale factor: "..(display.pixelHeight / display.actualContentHeight))
 
 --[[------------------------------------------------------------------------------
 GUI
@@ -155,8 +151,6 @@ do
   local tileHeight = screen.mmToPoints(5)
   local columns = math.floor(width/tileWidth)
   local rows = math.floor(height/tileHeight)
-  --print(tileWidth.."x"..tileHeight)
-  --print(rows.."x"..columns)
   local unusedX = math.floor(width%(tileWidth))
   local unusedY = math.floor(height%(tileHeight))
   board.container = display.newContainer(tileWidth*columns, tileHeight*rows)
@@ -184,15 +178,15 @@ board.group = display.newGroup()
 board.container:insert(board.group)
 board.group.anchorChildren = true
 do
-  local newTile = tClasses.boardTile.blank.new
+  local tileClass = tClasses.boardTile.blank
   local width = tClasses.boardTile.base.width
   local height = tClasses.boardTile.base.height
   for iC = 0,board.view.columns-1 do
     board[iC] = {}
     for iR = 0,board.view.rows-1 do
-      local tile = newTile(iC*width, iR*height)
+      local tile = tileClass:new()
+      tile:render(iC*width, iR*height, board.group)
       board[iC][iR] = tile
-      board.group:insert(tile.disp)
     end
   end
 end

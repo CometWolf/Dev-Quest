@@ -3,47 +3,25 @@
 --Forward declarations
 
 local class = {}
-
---Private properties
-
-local objMt = {__index = class}
+local disp = {} --This needs to exist in every new object for metatable performance reasons
 
 --Public properties
 
-class.rendered = false
-class.texture = false
-class.type = false
-class.width = 0 --Width and height is initialized while rendering the board
-class.height = 0
-class.event = {
-  player = {
-    __index = function(t,k)
-      error("No player "..k.." event defined for this class",2)
-    end
-  },
-  entity = {
-    __index = function(t,k)
-      error("No entity "..k.." event defined for this class",2)
-    end
-  },
-  touch = {
-    __index = function(t,k)
-      error("No touch "..k.." event defined for this class",2)
-    end
-  },
-}
-class.contains = {
-  player = false,
-  entity = false,
-  item = false
-}
+class.objMt = {__index = class} --metatable for created objects
 
---Object creation
+--Public methods
 
-class.new = function()
-  local object = {}
-  setmetatable(object,objMt)
-  return object
+function class:new()
+  return setmetatable({disp = disp},self.objMt)
+end
+
+function class:render(nX,nY,parent)
+  self.disp = display.newImageRect(self.texture, self.width, self.height)
+  self.disp.x = nX or 0
+  self.disp.y = nY or 0
+  if parent then
+    parent:insert(self.disp)
+  end
 end
 
 return class
