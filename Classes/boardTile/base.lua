@@ -1,16 +1,13 @@
 --Base boardTile class
 
 --Forward declarations
-
 local class = {}
 local disp = {} --This needs to exist in every new object for metatable performance reasons
 
 --Public properties
-
 class.objMt = {__index = class} --metatable for created objects
 
 --Public methods
-
 function class:new()
   return setmetatable({disp = disp},self.objMt)
 end
@@ -22,6 +19,10 @@ function class:render(nX,nY,parent)
   if parent then
     parent:insert(self.disp)
   end
+end
+
+function class:enter(entity)
+  return true
 end
 
 return class

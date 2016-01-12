@@ -1,4 +1,4 @@
---Blank boardTile class
+--Ice boardTile class
 
 --Inheritance
 local class = tClasses.boardTile.base:new()
@@ -18,17 +18,11 @@ class.objMt = {
 }
 
 class.texture = tImages.blankTile
-class.type = "blank"
+class.type = "ice"
 
 --public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  if self.item and entity.pickupItems then
-    entity:addItem(item)
-    if not self.item.unlimited then
-      self.item = nil
-    end
-  end
-  return true
+  return entity.grip or enity:move(nMotionX*2,nMotionY*2)
 end
 
 return class

@@ -168,9 +168,6 @@ do
   board.tileHeight = tileHeight
   tClasses.boardTile.base.width = tileWidth
   tClasses.boardTile.base.height = tileHeight
-  print(tileHeight)
-  print(tileWidth)
-  print(screen.width)
 end
 
 --Render play board
@@ -181,64 +178,30 @@ do
   local tileClass = tClasses.boardTile.blank
   local width = tClasses.boardTile.base.width
   local height = tClasses.boardTile.base.height
-  for iC = 0,board.view.columns-1 do
-    board[iC] = {}
-    for iR = 0,board.view.rows-1 do
+  for iC = 1,board.view.columns do
+    board[iC] = {
+      [0] = {}
+    }
+    for iR = 1,board.view.rows do
       local tile = tileClass:new()
-      tile:render(iC*width, iR*height, board.group)
+      tile:render((iC-1)*width, (iR-1)*height, board.group)
       board[iC][iR] = tile
     end
   end
 end
 
 --Render player
-board.player = display.newImage(board.container, tImages.player, 0, 0)
-board.player.row = 1
-board.player.column = 1
+player = tClasses.entity.player:new(1,1)
+player:render(nil,nil,board.container)
 
 --[[------------------------------------------------------------------------------
 Interactivity
 --------------------------------------------------------------------------------]]
-local debugText = display.newText("",0,0,native.systemFont)
-debugText.fill = {0}
-local movePlayer = function(nColumn, nRow, bAbsolute)
-  local newRow, newColumn
-  if bAbsolute then
-    newRow = nRow > 0 and nRow or 1
-    newColumn = nColumn > 0 and nColumn or 1
-  else
-    newRow = math.max(1, board.player.row + nRow)
-    newColumn = math.max(1, board.player.column + nColumn)
-  end
-  if newRow ~= board.player.row then
-    if newRow <= board.view.middleRow then
-      board.player.y = (newRow-1)*board.tileHeight
-      board.group.y = 0
-    else
-      board.player.y = (board.view.middleRow-1)*board.tileHeight
-      board.group.y = (board.view.middleRow-newRow)*board.tileHeight
-    end
-    board.player.row = newRow
-  end
-  if newColumn ~= board.player.column then
-    if newColumn <= board.view.middleColumn then
-      board.player.x = (newColumn-1)*board.tileWidth
-      board.group.x = 0
-    else
-      board.player.x = (board.view.middleColumn-1)*board.tileWidth
-      board.group.x = (board.view.middleColumn-newColumn)*board.tileWidth
-    end
-    board.player.column = newColumn
-  end
-  board.player.onTile = board.group[newColumn][newRow]
-  debugText.text = string.format(board.player.column).."\n"..string.format(board.player.row)
-end
-movePlayer(1,1,true)
 gui.controlRight.button2:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      movePlayer(1,0)
+      player:doMove(1,0)
     end
   end
 )
@@ -246,7 +209,7 @@ gui.controlLeft.button2:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      movePlayer(-1,0)
+      player:doMove(-1,0)
     end
   end
 )
@@ -254,7 +217,7 @@ gui.controlLeft.button1:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      movePlayer(0,-1)
+      player:doMove(0,-1)
     end
   end
 )
@@ -262,7 +225,7 @@ gui.controlLeft.button3:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      movePlayer(0,1)
+      player:doMove(0,1)
     end
   end
 )
@@ -270,7 +233,7 @@ gui.controlRight.button1:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      movePlayer(0,-1)
+      player:doMove(0,-1)
     end
   end
 )
@@ -278,7 +241,7 @@ gui.controlRight.button3:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      movePlayer(0,1)
+      player:doMove(0,1)
     end
   end
 )

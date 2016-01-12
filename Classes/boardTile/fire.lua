@@ -1,4 +1,4 @@
---Blank boardTile class
+--Fire boardTile class
 
 --Inheritance
 local class = tClasses.boardTile.base:new()
@@ -18,17 +18,11 @@ class.objMt = {
 }
 
 class.texture = tImages.blankTile
-class.type = "blank"
+class.type = "fire"
 
 --public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  if self.item and entity.pickupItems then
-    entity:addItem(item)
-    if not self.item.unlimited then
-      self.item = nil
-    end
-  end
-  return true
+  return entity.fireProof or entity.intangible
 end
 
 return class

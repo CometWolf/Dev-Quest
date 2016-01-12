@@ -1,9 +1,11 @@
 --Blank boardTile class
 
 --Inheritance
+
 local class = tClasses.boardTile.base:new()
 
 --Public properties
+
 class.objMt = {
   __index = function(t,k)
     return t.disp[k] or class[k]
@@ -18,17 +20,6 @@ class.objMt = {
 }
 
 class.texture = tImages.blankTile
-class.type = "blank"
-
---public methods 
-function class:enter(entity,nMotionX,nMotionY)
-  if self.item and entity.pickupItems then
-    entity:addItem(item)
-    if not self.item.unlimited then
-      self.item = nil
-    end
-  end
-  return true
-end
+class.type = "spawn"
 
 return class

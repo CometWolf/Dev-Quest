@@ -1,4 +1,4 @@
---Blank boardTile class
+--Door boardTile class
 
 --Inheritance
 local class = tClasses.boardTile.base:new()
@@ -18,17 +18,19 @@ class.objMt = {
 }
 
 class.texture = tImages.blankTile
-class.type = "blank"
+class.type = "door"
 
 --public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  if self.item and entity.pickupItems then
-    entity:addItem(item)
-    if not self.item.unlimited then
-      self.item = nil
-    end
-  end
-  return true
+  return self.unlocked or entity.intangible
+end
+
+function class:lock()
+  self.unlocked = false
+end
+
+function class:unlock()
+  self.unlocked = true
 end
 
 return class
