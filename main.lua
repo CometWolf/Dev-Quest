@@ -137,6 +137,7 @@ do
       side["button"..i+1] = button
     end
   end
+  gui.statusBar:toFront()
 end
 
 --[[------------------------------------------------------------------------------
@@ -177,11 +178,14 @@ end
 
 --Render play board
 board.group = display.newGroup()
-for iC = 0,board.view.columns-1+20 do
-  board[iR] = {}
-  for iY = 0,board.view.rows-1+20 do
-    local tile = tClasses.boardTile.blank.new(iR*(tClasses.boardTile.base.width), iC*(tClasses.boardTile.base.height))
-    board[iR][iC] = tile
+board.group.x = board.container.x
+board.group.y = board.container.y
+board.group.anchorChildren = true
+for iC = 0,board.view.columns-1 do
+  board[iC] = {}
+  for iR = 0,board.view.rows-1 do
+    local tile = tClasses.boardTile.blank.new(iC*(tClasses.boardTile.base.width), iR*(tClasses.boardTile.base.height))
+    board[iC][iR] = tile
     board.group:insert(tile.disp)
   end
 end
@@ -193,10 +197,11 @@ board.player = display.newImage(board.container, tImages.player, 0, 0)
 board.player.row = 1
 board.player.column = 1
 
-
 --[[------------------------------------------------------------------------------
 Interactivity
 --------------------------------------------------------------------------------]]
+local debugText = display.newText("",0,0,native.systemFont)
+debugText.fill = {0}
 local movePlayer = function(nColumn, nRow, bAbsolute)
   local newRow, newColumn
   if bAbsolute then
@@ -209,25 +214,27 @@ local movePlayer = function(nColumn, nRow, bAbsolute)
   if newRow ~= board.player.row then
     if newRow <= board.view.middleRow then
       board.player.y = (newRow-1)*board.tileHeight
-      board.group.y = 0
+      board.group.y = board.container.y
     else
-      board.player.y = board.view.middleRow*board.tileHeight
-      board.group.y = (newRow-board.view.middleRow)*board.tileHeight
+      board.player.y = (board.view.middleRow-1)*board.tileHeight
+      board.group.y = (newRow-board.view.middleRow)*board.tileHeight+board.container.x
     end
     board.player.row = newRow
   end
   if newColumn ~= board.player.column then
     if newColumn <= board.view.middleColumn then
       board.player.x = (newColumn-1)*board.tileWidth
-      board.group.x = 0
+      board.group.x = board.container.x
     else
-      board.player.x = board.view.middleColumn*board.tileWidth
-      board.group.x = (newColumn-board.view.middleColumn)*board.tileWidth
+      board.player.x = (board.view.middleColumn-1)*board.tileWidth
+      board.group.x = (newColumn-board.view.middleColumn)*board.tileWidth+board.container.x
     end
     board.player.column = newColumn
   end
   board.player.onTile = board.group[newColumn][newRow]
+  debugText.text = string.format(board.player.column).."\n"..string.format(board.player.row)
 end
+movePlayer(1,1,true)
 gui.controlRight.button2:addEventListener(
   "touch",
   function(event)
