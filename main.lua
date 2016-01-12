@@ -31,7 +31,7 @@ do
           tDir[fileName] = filePath
         else
           fileName = fileName:match("(.+)%..-$") --strip file extension
-          tFile[fileName] = sPath:gsub("/","\.").."."..fileName --requires uses '.' instead of "." ...WTF!?
+          tFile[fileName] = sPath:gsub("/","\.").."."..fileName --require uses '.' instead of "/" ...WTF!?
         end
       end
     end
@@ -159,41 +159,74 @@ do
   board.container.x = gui.controlLeft.edgeX+1+math.floor(unusedX/2)
   board.container.y = gui.statusBar.bottomY+1+math.floor(unusedY/2)
   board.container.anchorChildren = false
-  board.columns = columns
-  board.rows = rows
+  board.view = {
+    rows = rows,
+    columns = columns,
+    middleRow = math.floor(rows/2),
+    middleColumn = math.floor(columns/2),
+    playerRowOffset = 0,
+    playerColumnOffset = 0,
+    scrollRow = 0,
+    scrollColumn = 0,
+  }
   board.tileWidth = tileWidth
   board.tileHeight = tileHeight
-  board.middleX = math.round(columns*tileWidth/2)
-  board.middleY = math.round(rows*tileHeight/2)
   tClasses.boardTile.base.width = tileWidth
   tClasses.boardTile.base.height = tileHeight
 end
 
 --Render play board
-for iX = 0,board.columns-1 do
-  board[iX] = {}
-  for iY = 0,board.rows-1 do
-    local tile = tClasses.boardTile.blank.new(iX*(tClasses.boardTile.base.width), iY*(tClasses.boardTile.base.height))
-    board[iX][iY] = tile
-    board.container:insert(tile.disp)
+board.group = display.newGroup()
+for iC = 0,board.view.columns-1+20 do
+  board[iR] = {}
+  for iY = 0,board.view.rows-1+20 do
+    local tile = tClasses.boardTile.blank.new(iR*(tClasses.boardTile.base.width), iC*(tClasses.boardTile.base.height))
+    board[iR][iC] = tile
+    board.group:insert(tile.disp)
   end
 end
-board.middleTile = board[math.round(board.columns/2)][math.round(board.rows/2)]
 board.container:toBack()
+board.group:toBack()
 
 --Render player
-board.player = display.newImage(board.container, tImages.player, board.middleX, board.middleY)
-board.player.anchorX = 0.5
-board.player.anchorY = 0.5
+board.player = display.newImage(board.container, tImages.player, 0, 0)
+board.player.row = 1
+board.player.column = 1
 
 
 --[[------------------------------------------------------------------------------
 Interactivity
 --------------------------------------------------------------------------------]]
-local movePlayer = function(nX,nY)
-  print("Move: "..nX..","..nY)
-  board.player.x = board.player.x+nX*board.tileWidth
-  board.player.y = board.player.y+nY*board.tileHeight
+local movePlayer = function(nColumn, nRow, bAbsolute)
+  local newRow, newColumn
+  if bAbsolute then
+    newRow = math.max(1, nRow)
+    newColumn = math.max(1, nColumn)
+  else
+    newRow = math.max(1, board.player.row + nRow)
+    newColumn = math.max(1, board.player.column + nColumn)
+  end
+  if newRow ~= board.player.row then
+    if newRow <= board.view.middleRow then
+      board.player.y = (newRow-1)*board.tileHeight
+      board.group.y = 0
+    else
+      board.player.y = board.view.middleRow*board.tileHeight
+      board.group.y = (newRow-board.view.middleRow)*board.tileHeight
+    end
+    board.player.row = newRow
+  end
+  if newColumn ~= board.player.column then
+    if newColumn <= board.view.middleColumn then
+      board.player.x = (newColumn-1)*board.tileWidth
+      board.group.x = 0
+    else
+      board.player.x = board.view.middleColumn*board.tileWidth
+      board.group.x = (newColumn-board.view.middleColumn)*board.tileWidth
+    end
+    board.player.column = newColumn
+  end
+  board.player.onTile = board.group[newColumn][newRow]
 end
 gui.controlRight.button2:addEventListener(
   "touch",

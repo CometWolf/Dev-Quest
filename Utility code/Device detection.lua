@@ -18,6 +18,7 @@ if model:match"^iP" then
   end
 else
   device.os = "android"
+  device.ppi = system.getInfo("androidDisplayApproximateDpi")
 end
 
 return device
