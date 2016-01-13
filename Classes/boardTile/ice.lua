@@ -23,7 +23,7 @@ class.char = "i"
 
 --Public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  return entity.grip or false, nMotionX > 0 and 1 or nMotionX < 0 and -1 or 0, nMotionY > 0 and 1 or nMotionY < 0 and -1 or 0
+  return entity.grip, nMotionX > 0 and 1 or nMotionX < 0 and -1 or 0, nMotionY > 0 and 1 or nMotionY < 0 and -1 or 0
 end
 
 return class

@@ -23,7 +23,7 @@ class.char = "x"
 
 --Public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  return false, nMotionX > 0 and -1 or nMotionX < 0 and 1 or 0, nMotionY > 0 and -1 or nMotionY < 0 and 1 or 0
+  return false
 end
 
 return class

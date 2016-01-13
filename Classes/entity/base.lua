@@ -34,7 +34,6 @@ function class:render(nX,nY,parent)
 end
 
 function class:checkMove(nColumn, nRow, bAbsolute)
-    print("Checking: "..nColumn..","..nRow)
   if bAbsolute then
     nRow = nRow > 0 and nRow or 1
     nColumn = nColumn > 0 and nColumn or 1
@@ -44,21 +43,27 @@ function class:checkMove(nColumn, nRow, bAbsolute)
   end
   local motionX = nColumn-self.column
   local motionY = nRow-self.row
-  local moveAllowed, columnOffset, rowOffset = board[nColumn][nRow]:enter(self,motionX,motionY)
-  return moveAllowed, nColumn+(not movedAllowed and columnOffset or 0), nRow+(not movedAllowed and rowOffset or 0)
+  local allowMove, columnOffset, rowOffset = board[nColumn][nRow]:enter(self,motionX,motionY)
+  columnOffset = columnOffset or 0
+  rowOffset = rowOffset or 0
+  if allowMove then
+    return allowMove
+  elseif nColumn == 0 and nRow == 0 then
+    return false, 0, 0
+  else
+    return allowMove, columnOffset+(bAbsolute and  nColumn or 0), rowOffset+(bAbsolute and nRow or 0)
+  end
 end
 
 function class:tryMove(nColumn, nRow, bAbsolute)
-  local moveAllowed
-  while not moveAllowed do
-    moveAllowed, nColumn, nRow = self:checkMove(nColumn, nRow, bAbsolute)
-    bAbsolute = true
+  local allowed, newColumn, newRow
+  allowed, newColumn, newRow = self:checkMove(nColumn, nRow, bAbsolute)
+  if allowed then
+    self:move(nColumn, nRow, bAbsolute)
+  elseif newColumn ~= 0 or newRow ~= 0 then
+    self:move(nColumn, nRow, bAbsolute)
+    self:tryMove(newColumn, newRow, bAbsolute)
   end
-  if nColumn ~= 0 or nRow ~= 0 then
-    self:move(nColumn,nRow)
-    return true
-  end
-  return false
 end
 
 function class:addItem(item,nAmount)
