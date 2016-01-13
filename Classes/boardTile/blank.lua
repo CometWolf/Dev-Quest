@@ -26,7 +26,7 @@ function class:enter(entity,nMotionX,nMotionY)
   if self.item and entity.pickupItems then
     entity:addItem(self.item,self.item.pickup)
   end
-  return true
+  return true, 0, 0
 end
 
 return class

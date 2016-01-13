@@ -43,7 +43,7 @@ function class:move(nColumn, nRow)
     end
     self.column = nColumn
   end
-  local tile = board.group[nColumn][nRow]
+  local tile = board[nColumn][nRow]
   tile.entity = player
   self.tile = tile
 end

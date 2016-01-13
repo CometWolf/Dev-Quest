@@ -21,9 +21,9 @@ class.texture = tImages.blockTile
 class.type = "block"
 class.char = "x"
 
---public methods 
+--Public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  return false
+  return false, nMotionX > 0 and -1 or nMotionX < 0 and 1 or 0, nMotionY > 0 and -1 or nMotionY < 0 and 1 or 0
 end
 
 return class

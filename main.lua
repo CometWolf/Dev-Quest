@@ -29,7 +29,6 @@ do
     for filename in lfs.dir(resourceDirectory..sPath) do
       if filename ~= "." and filename ~= ".." and filename ~= ".DS_Store" then --why the hell does it return "." and ".."!?
         local filePath = sPath.."/"..filename
-        print(lfs.attributes(resourceDirectory..filePath,"mode"))
         if lfs.attributes(resourceDirectory..filePath,"mode") == "directory" then
           tTable[filename] = {}
           getFiles(filePath,tTable[filename])

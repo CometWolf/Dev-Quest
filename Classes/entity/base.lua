@@ -34,6 +34,7 @@ function class:render(nX,nY,parent)
 end
 
 function class:checkMove(nColumn, nRow, bAbsolute)
+    print("Checking: "..nColumn..","..nRow)
   if bAbsolute then
     nRow = nRow > 0 and nRow or 1
     nColumn = nColumn > 0 and nColumn or 1
@@ -41,13 +42,20 @@ function class:checkMove(nColumn, nRow, bAbsolute)
     nRow = math.max(1, self.row + nRow)
     nColumn = math.max(1, self.column + nColumn)
   end
-  return board[nColumn][nRow]:enter(self),nColumn,nRow
+  local motionX = nColumn-self.column
+  local motionY = nRow-self.row
+  local moveAllowed, columnOffset, rowOffset = board[nColumn][nRow]:enter(self,motionX,motionY)
+  return moveAllowed, nColumn+(not movedAllowed and columnOffset or 0), nRow+(not movedAllowed and rowOffset or 0)
 end
 
 function class:tryMove(nColumn, nRow, bAbsolute)
-  local move, column, row = self:checkMove(nColumn, nRow, bAbsolute)
-  if move then
-    self:move(column,row)
+  local moveAllowed
+  while not moveAllowed do
+    moveAllowed, nColumn, nRow = self:checkMove(nColumn, nRow, bAbsolute)
+    bAbsolute = true
+  end
+  if nColumn ~= 0 or nRow ~= 0 then
+    self:move(nColumn,nRow)
     return true
   end
   return false

@@ -21,8 +21,8 @@ function class:render(nX,nY,parent)
   end
 end
 
-function class:enter(entity)
-  return true
+function class:enter(entity,nMotionX,nMotionY)
+  return true, 0, 0
 end
 
 return class
