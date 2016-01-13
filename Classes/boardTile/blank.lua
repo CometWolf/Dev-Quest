@@ -21,13 +21,10 @@ class.texture = tImages.blankTile
 class.type = "blank"
 class.char = " "
 
---public methods 
+--Public methods
 function class:enter(entity,nMotionX,nMotionY)
   if self.item and entity.pickupItems then
-    entity:addItem(item)
-    if not self.item.unlimited then
-      self.item = nil
-    end
+    entity:addItem(self.item,self.item.pickup)
   end
   return true
 end

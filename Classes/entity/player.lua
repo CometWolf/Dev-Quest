@@ -19,6 +19,7 @@ class.objMt = {
 
 class.texture = tImages.player
 class.type = "player"
+class.pickupItems = true
 
 --public methods
 function class:move(nColumn, nRow)
@@ -42,7 +43,9 @@ function class:move(nColumn, nRow)
     end
     self.column = nColumn
   end
-  self.onTile = board.group[nColumn][nRow]
+  local tile = board.group[nColumn][nRow]
+  tile.entity = player
+  self.tile = tile
 end
 
 return class
