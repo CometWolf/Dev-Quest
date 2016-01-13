@@ -17,75 +17,77 @@ tClasses = {}
 tImages = {}
 tLevels = {}
 do
+  local resourceDirectory = system.getInfo( "platformName" ) ~= "Win" and system.pathForFile().."/" or ""
   local classFolder = "Classes"
   local imageFolder = "Images"
   local levelFolder = "Levels"
   local lfs = require("lfs")
 
-  local findFiles
-  findFiles = function(sPath,tTable)
-    for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then --why the hell does it return "." and ".."!?
-        local filePath = sPath.."/"..fileName
-        if lfs.attributes(filePath,"mode") == "directory" then
-          tTable[fileName] = {}
-          findImages(filePath,tTable[fileName])
+  local getFiles
+  getFiles = function(sPath,tTable)
+    tTable = tTable or {}
+    for filename in lfs.dir(resourceDirectory..sPath) do
+      if filename ~= "." and filename ~= ".." and filename ~= ".DS_Store" then --why the hell does it return "." and ".."!?
+        local filePath = sPath.."/"..filename
+        print(lfs.attributes(resourceDirectory..filePath,"mode"))
+        if lfs.attributes(resourceDirectory..filePath,"mode") == "directory" then
+          tTable[filename] = {}
+          getFiles(filePath,tTable[filename])
         else
-          fileName = fileName:match("(.-)%..-$")
-          local num = tonumber(fileName)
-          print(fileName)
-          tTable[num and num or fileName] = filePath
+          tTable[filename] = filePath
         end
       end
     end
+    return tTable
   end
-  findFiles(levelFolder,tLevels)
+  
+  local processFiles
+  processFiles = function(readTable, writeTable, fileFunc)
+    for filename, path in pairs(readTable) do
+      if type(path) == "string" then
+        fileFunc(writeTable, filename, path)
+      else
+        writeTable[k] = {}
+        processFiles(v, writeTable[k], fileFunc)
+      end
+    end
+  end
+  
+--Process level filepaths
+  processFiles(
+    getFiles(levelFolder),
+    tLevels,
+    function(tTable, sFilename, sPath)
+      sFilename = sFilename:match("(.)%.lvl$")
+      if sFilename then
+        local num = tonumber(sFilename)
+        tTable[num and num or sFilename] = sPath
+      end
+    end
+  )
+  
+--Process image filepaths
+  processFiles(
+    getFiles(imageFolder),
+    tImages,
+    function(tTable, sFilename, sPath)
+      tTable[sFilename:match("(.-)[@%dx]*%..-$")] = sPath --strip file extension and resolution suffix
+    end
+  )
 
-  local findImages
-  findImages = function(sPath,tTable)
-    for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then
-        local filePath = sPath.."/"..fileName
-        if lfs.attributes(filePath,"mode") == "directory" then
-          tTable[fileName] = {}
-          findImages(filePath,tTable[fileName])
-        else
-          tTable[fileName:match("(.-)[@%dx]*%..-$")] = filePath --strip file extension and resolution prefix
-        end
-      end
-    end
+--Load classes
+  local fileFunc = function(tTable, sFilename, sPath)
+    tTable[sFilename:match("(.-)%.lua$")] = require(sPath:gsub("[/\\]","."):match("(.-)%.lua$")) --require uses '.' instead of '\'
   end
-  findImages(imageFolder,tImages)
-
-  local loadClass
-  loadClass = function(sPath,tTable)
-    local tFile = {}
-    local tDir = {}
-    for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then  
-        local filePath = sPath.."/"..fileName
-        if lfs.attributes(filePath,"mode") == "directory" then
-          tDir[fileName] = filePath
-        else
-          fileName = fileName:match("(.+)%..-$") --strip file extension
-          tFile[fileName] = sPath:gsub("/","\.").."."..fileName --require uses '.' instead of "/" ...WTF!?
-        end
-      end
-    end
-    if tFile.base then
-      tTable.base = require(tFile.base)
-    end
-    for k,v in pairs(tFile) do
-      if k ~= "base" then
-        tTable[k] = require(v)
-      end
-    end
-    for k,v in pairs(tDir) do
-      tTable[k] = {}
-      loadClass(v,tTable[k])
-    end
+  for k,v in pairs(getFiles(classFolder)) do
+    tClasses[k] = {}
+    fileFunc(tClasses[k], "base.lua", v["base.lua"]) --Base class must be loaded first
+    processFiles(
+      v,
+      tClasses[k],
+      fileFunc
+    )
   end
-  loadClass(classFolder,tClasses)
 end
 
 --[[------------------------------------------------------------------------------
