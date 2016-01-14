@@ -183,11 +183,18 @@ do
       load[i] = {}
       local j = 1
       for char in line:gmatch"." do
-        load[i][j] = tTileChar[char]
+        local tileClass = tTileChar[char]
+        if tileClass.type == tClasses.boardTile.spawn.type then
+          load.spawnColumn = i
+          load.spawnRow = j
+        end
+        load[i][j] = tileClass:new()
         j = j+1
       end
       i = i+1
     end
+    load.spawnColumn = load.spawnColumn or 2
+    load.spawnRow = load.spawnRow or 2
     return load
   end
 end
@@ -233,17 +240,10 @@ do
   local height = tClasses.boardTile.base.height
   for iC = 1,board.columns do
     for iR = 1,board.rows do
-      local tile = board[iC][iR]:new()
+      local tile = board[iC][iR]
       tile:render((iC-1)*width, (iR-1)*height, board.group)
-      if tile.type == "spawn" then
-        board.spawnColumn = iC
-        board.spawnRow = iR
-      end
-      board[iC][iR] = tile
     end
   end
-  board.spawnColumn = board.spawnColumn or 2
-  board.spawnRow = board.spawnRow or 2
 end
 
 --Render player
