@@ -3,19 +3,40 @@
 --Forward declarations
 local class = {}
 
+--Private properties
+local transitionMoveTo = transition.moveTo
+
 --Public properties
 class.objMt = {__index = class} --metatable for created objects
 class.width = tileHeight
 class.height = tileWidth
+class.moveTime = math.ceil(1000/display.fps)
+class.moveX = 1
+class.moveY = 1
+class.momentumX = 0
+class.momentumY = 0
 
 --Class methods
 function class:new(nColumn, nRow, parent)
-  local obj = {
+  local obj
+  obj = {
+    --instance properties
     disp = display.newImageRect(self.texture, self.width, self.height),
     inventory = {},
     column = nColumn,
     row = nRow,
     tile = board[nColumn][nRow],
+    inMotion = false,
+    motionComplete = function()
+      obj.inMotion = false
+      local momX = obj.momentumX > 0 and 1 or obj.momentumX < 0 and -1
+      local momY = obj.momentumY > 0 and 1 or obj.momentumY < 0 and -1
+      if momX or momY then
+        obj.momentumX = obj.momentumX-((momX or 0)*obj.moveX)
+        obj.momentumY = obj.momentumY-((momY or 0)*obj.moveY)
+        obj:tryMove(momX,momY)
+      end
+    end
   }
   obj.disp.x = (nColumn-1)*tileWidth
   obj.disp.y = (nRow-1)*tileHeight
@@ -30,36 +51,53 @@ function class:inherit()
 end
 
 --Public methods
-function class:checkMove(nColumn, nRow, bAbsolute)
-  if bAbsolute then
-    nRow = nRow > 0 and nRow or 1
-    nColumn = nColumn > 0 and nColumn or 1
-  else
-    nRow = math.max(1, self.row + nRow)
-    nColumn = math.max(1, self.column + nColumn)
+
+function class:motion(nX, nY, bAbsolute)
+  if self.inMotion then
+    return false
   end
-  local motionX = nColumn-self.column
-  local motionY = nRow-self.row
-  local allowMove, columnOffset, rowOffset = board[nColumn][nRow]:enter(self,motionX,motionY)
-  columnOffset = columnOffset or 0
-  rowOffset = rowOffset or 0
-  if allowMove then
-    return allowMove
-  elseif nColumn == 0 and nRow == 0 then
-    return false, 0, 0
-  else
-    return allowMove, columnOffset+(bAbsolute and  nColumn or 0), rowOffset+(bAbsolute and nRow or 0)
+  if not bAbsolute then
+    nX = self.x+(nX and nX or 0)
+    nY = self.x+(nY and nY or 0)
   end
+  self.inMotion = transitionMoveTo(
+    self,
+    {
+      x = nX,
+      y = nY,
+      time = self.moveTime, 
+      onComplete = self.motionComplete
+    }
+  )
 end
 
-function class:tryMove(nColumn, nRow, bAbsolute)
-  local allowed, newColumn, newRow
-  allowed, newColumn, newRow = self:checkMove(nColumn, nRow, bAbsolute)
-  if allowed then
-    self:move(nColumn, nRow, bAbsolute)
-  elseif newColumn ~= 0 or newRow ~= 0 then
-    self:move(nColumn, nRow, bAbsolute)
-    self:tryMove(newColumn, newRow, bAbsolute)
+function class:tryMove(nX,nY, bAbsolute)
+  if self.inMotion then
+    return
+  end
+  if bAbsolute then
+    nX = nX or self.x-board.group.x
+    nY = nY or self.y-board.group.y
+  else
+    nX = self.x-board.group.x+(nX or 0)
+    nY = self.y-board.group.y+(nY or 0)
+  end
+  local column = math.floor(nX/tileWidth)+1
+  local row = math.floor(nY/tileHeight)+1
+  local motionX = nX-self.x+board.group.x
+  local motionY = nY-self.y+board.group.y
+  local tile = board[column][row]
+  if tile ~= self.tile then
+    if not tile:enter(self,motionX,motionY) then
+      self.momentumX = 0
+      self.momentumY = 0
+      return false
+    end
+    self:move(nX, nY, true)
+    self.tile = tile
+    tile.entity = self
+  else
+    self:move(nX, nY, true)
   end
 end
 

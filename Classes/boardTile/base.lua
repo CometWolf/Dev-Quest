@@ -15,10 +15,11 @@ function class:new(nColumn, nRow, parent)
     column = nColumn,
     row = nRow,
   }
+  print()
   obj.disp.x = (nColumn-1)*self.width
   obj.disp.y = (nRow-1)*self.height
   if parent then
-    parent:insert(self.disp)
+    parent:insert(obj.disp)
   end
   return setmetatable(obj, self.objMt)
 end

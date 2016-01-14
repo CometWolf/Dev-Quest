@@ -11,6 +11,30 @@ do
 end
 
 --[[------------------------------------------------------------------------------
+Display setup
+--------------------------------------------------------------------------------]]
+display.setStatusBar(display.HiddenStatusBar)
+display.setDefault( "anchorX", 0 )
+display.setDefault( "anchorY", 0 )
+
+screen = {}
+do
+  screen.width = display.contentWidth
+  screen.height = display.contentHeight
+  local inchInMm = 25.4
+  local pointsPerInch = 163
+  local pointsPerMm = pointsPerInch/25.4
+  screen.mmToPoints = function(nMilimeter)
+    return math.round(nMilimeter*pointsPerMm)
+  end
+  screen.inchToPoints = function(nInch)
+    return math.round(nInch*pointsPerInch)
+  end
+  tileWidth = screen.mmToPoints(5)
+  tileHeight = screen.mmToPoints(5)
+end
+
+--[[------------------------------------------------------------------------------
 Game file loading
 --------------------------------------------------------------------------------]]
 tClasses = {}
@@ -90,30 +114,6 @@ do
 end
 
 --[[------------------------------------------------------------------------------
-Display setup
---------------------------------------------------------------------------------]]
-display.setStatusBar(display.HiddenStatusBar)
-display.setDefault( "anchorX", 0 )
-display.setDefault( "anchorY", 0 )
-
-screen = {}
-do
-  screen.width = display.contentWidth
-  screen.height = display.contentHeight
-  local inchInMm = 25.4
-  local pointsPerInch = 163
-  local pointsPerMm = pointsPerInch/25.4
-  screen.mmToPoints = function(nMilimeter)
-    return math.round(nMilimeter*pointsPerMm)
-  end
-  screen.inchToPoints = function(nInch)
-    return math.round(nInch*pointsPerInch)
-  end
-  tileWidth = screen.mmToPoints(5)
-  tileHeight = screen.mmToPoints(5)
-end
-
---[[------------------------------------------------------------------------------
 GUI
 --------------------------------------------------------------------------------]]
 gui = {}
@@ -180,10 +180,13 @@ do
       error(err)
     end
     local load = tTable or {}
+    local columns, rows = 0,0
     local row = 1
     for line in file:lines() do
+      rows = row > rows and row or rows
       local column = 1
       for char in line:gmatch"." do
+        columns = column > columns and column or columns
         local tileClass = tTileChar[char]
         if tileClass.type == tClasses.boardTile.spawn.type then
           load.spawnColumn = column
@@ -195,6 +198,8 @@ do
       end
       row = row+1
     end
+    load.columns = columns
+    load.rows = rows
     load.spawnColumn = load.spawnColumn or 2
     load.spawnRow = load.spawnRow or 2
     return load
@@ -216,13 +221,11 @@ do
   board.container.y = gui.statusBar.bottomY+math.floor(unusedY/2)
   board.container.anchorChildren = false
   board.view = {
-    rows = rows,
     columns = columns,
-    middleRow = math.floor(rows/2)+1,
-    middleColumn = math.floor(columns/2)+1,
+    rows = rows,
+    middleX = math.round(width/2),
+    middleY = math.round(height/2),
   }
-  board.columns = #board
-  board.rows = #board[1]
 end
 
 loadBoard(tLevels[1], board)
@@ -236,8 +239,7 @@ do
   local height = tileHeight
   for iC = 1,board.columns do
     for iR = 1,board.rows do
-      local tile = board[iC][iR]
-      tile:render((iC-1)*width, (iR-1)*height, board.group)
+      board[iC][iR] = board[iC][iR]:new(iC, iR, board.group)
     end
   end
 end
@@ -248,11 +250,12 @@ player = tClasses.entity.player:new(board.spawnColumn, board.spawnRow, board.con
 --[[------------------------------------------------------------------------------
 Interactivity
 --------------------------------------------------------------------------------]]
+
 gui.controlRight.button2:addEventListener(
   "touch",
   function(event)
-    if event.phase == "began" then
-      player:tryMove(1,0)
+    while event.phase == "began" do
+      player:tryMove(1)
     end
   end
 )
@@ -260,7 +263,7 @@ gui.controlLeft.button2:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:tryMove(-1,0)
+      player:tryMove(-1)
     end
   end
 )
@@ -268,7 +271,7 @@ gui.controlLeft.button1:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:tryMove(0,-1)
+      player:tryMove(nil,-1)
     end
   end
 )
@@ -276,7 +279,7 @@ gui.controlLeft.button3:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:tryMove(0,1)
+      player:tryMove(nil,1)
     end
   end
 )
@@ -284,7 +287,7 @@ gui.controlRight.button1:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:tryMove(0,-1)
+      player:tryMove(nil,-1)
     end
   end
 )
@@ -292,7 +295,7 @@ gui.controlRight.button3:addEventListener(
   "touch",
   function(event)
     if event.phase == "began" then
-      player:tryMove(0,1)
+      player:tryMove(nil,1)
     end
   end
 )

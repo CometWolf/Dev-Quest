@@ -23,7 +23,11 @@ class.char = "i"
 
 --Public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  return entity.grip, nMotionX > 0 and 1 or nMotionX < 0 and -1 or 0, nMotionY > 0 and 1 or nMotionY < 0 and -1 or 0
+  if not entity.grip then
+    entity.momentumX = entity.momentumX+(nMotionX > 0 and tileWidth or nMotionX < 0 and -tileWidth or 0)*2
+    entity.momentumY = entity.momentumY+(nMotionY > 0 and tileHeight or nMotionY < 0 and -tileHeight or 0)*2
+  end
+  return true
 end
 
 return class
