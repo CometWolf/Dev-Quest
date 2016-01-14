@@ -2,37 +2,34 @@
 
 --Forward declarations
 local class = {}
-local disp = {} --This needs to exist in every new object for metatable performance reasons
 
 --Public properties
 class.objMt = {__index = class} --metatable for created objects
-class.width = 32
-class.height = 32
-class.inventory = {
+class.width = tileHeight
+class.height = tileWidth
 
-}
+--Class methods
+function class:new(nColumn, nRow, parent)
+  local obj = {
+    disp = display.newImageRect(self.texture, self.width, self.height),
+    inventory = {},
+    column = nColumn,
+    row = nRow,
+    tile = board[nColumn][nRow],
+  }
+  obj.disp.x = (nColumn-1)*tileWidth
+  obj.disp.y = (nRow-1)*tileHeight
+  if parent then
+    parent:insert(obj.disp)
+  end
+  return setmetatable(obj,self.objMt)
+end
+
+function class:inherit()
+  return setmetatable({}, self.objMt)
+end
 
 --Public methods
-function class:new(nColumn, nRow)
-  return setmetatable(
-    {
-      disp = disp,
-      column = nColumn,
-      row = nRow,
-    },
-    self.objMt
-  )
-end
-
-function class:render(nX,nY,parent)
-  self.disp = display.newImageRect(self.texture, self.width, self.height)
-  self.disp.x = nX or (self.column-1)*board.tileWidth
-  self.disp.y = nY or (self.row-1)*board.tileHeight
-  if parent then
-    parent:insert(self.disp)
-  end
-end
-
 function class:checkMove(nColumn, nRow, bAbsolute)
   if bAbsolute then
     nRow = nRow > 0 and nRow or 1

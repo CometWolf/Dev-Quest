@@ -2,25 +2,32 @@
 
 --Forward declarations
 local class = {}
-local disp = {} --This needs to exist in every new object for metatable performance reasons
 
 --Public properties
 class.objMt = {__index = class} --metatable for created objects
+class.width = tileWidth
+class.height = tileHeight
 
---Public methods
-function class:new()
-  return setmetatable({disp = disp},self.objMt)
-end
-
-function class:render(nX,nY,parent)
-  self.disp = display.newImageRect(self.texture, self.width, self.height)
-  self.disp.x = nX or 0
-  self.disp.y = nY or 0
+--Class methods
+function class:new(nColumn, nRow, parent)
+  local obj = {
+    disp = display.newImageRect(self.texture, self.width, self.height),
+    column = nColumn,
+    row = nRow,
+  }
+  obj.disp.x = (nColumn-1)*self.width
+  obj.disp.y = (nRow-1)*self.height
   if parent then
     parent:insert(self.disp)
   end
+  return setmetatable(obj, self.objMt)
 end
 
+function class:inherit()
+  return setmetatable({}, self.objMt)
+end
+
+--Public methods
 function class:enter(entity,nMotionX,nMotionY)
   return true, 0, 0
 end

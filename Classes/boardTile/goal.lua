@@ -1,4 +1,4 @@
---Wall boardTile class
+--Goal boardTile class
 
 --Inheritance
 local class = tClasses.boardTile.base:inherit()
@@ -18,11 +18,6 @@ class.objMt = {
 }
 
 class.texture = tImages.blankTile
-class.type = "wall"
-
---public methods 
-function class:enter(entity,nMotionX,nMotionY)
-  return entity.intangible
-end
+class.type = "goal"
 
 return class

@@ -1,7 +1,7 @@
 --Blank boardTile class
 
 --Inheritance
-local class = tClasses.boardTile.base:new()
+local class = tClasses.boardTile.base:inherit()
 
 --Public properties
 class.objMt = {

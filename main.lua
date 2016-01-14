@@ -109,6 +109,8 @@ do
   screen.inchToPoints = function(nInch)
     return math.round(nInch*pointsPerInch)
   end
+  tileWidth = screen.mmToPoints(5)
+  tileHeight = screen.mmToPoints(5)
 end
 
 --[[------------------------------------------------------------------------------
@@ -172,26 +174,26 @@ do
     end
   end
 
-  function loadBoard(sPath)
+  function loadBoard(sPath, tTable)
     local file,err = io.open(sPath)
     if not file then
       error(err)
     end
-    local load = {}
-    local i = 1
+    local load = tTable or {}
+    local row = 1
     for line in file:lines() do
-      load[i] = {}
-      local j = 1
+      local column = 1
       for char in line:gmatch"." do
         local tileClass = tTileChar[char]
         if tileClass.type == tClasses.boardTile.spawn.type then
-          load.spawnColumn = i
-          load.spawnRow = j
+          load.spawnColumn = column
+          load.spawnRow = row
         end
-        load[i][j] = tileClass:new()
-        j = j+1
+        load[column] = load[column] or {}
+        load[column][row] = tileClass
+        column = column+1
       end
-      i = i+1
+      row = row+1
     end
     load.spawnColumn = load.spawnColumn or 2
     load.spawnRow = load.spawnRow or 2
@@ -199,14 +201,11 @@ do
   end
 end
 
-board = loadBoard(tLevels[1])
-
 --calculate playboard
+board = {}
 do
   local width = screen.width-gui.controlLeft.width-gui.controlRight.width
   local height = screen.height-gui.statusBar.height
-  local tileWidth = screen.mmToPoints(5)
-  local tileHeight = screen.mmToPoints(5)
   local columns = math.floor(width/tileWidth)
   local rows = math.floor(height/tileHeight)
   local unusedX = math.floor(width%(tileWidth))
@@ -222,22 +221,19 @@ do
     middleRow = math.floor(rows/2)+1,
     middleColumn = math.floor(columns/2)+1,
   }
-  board.tileWidth = tileWidth
-  board.tileHeight = tileHeight
   board.columns = #board
   board.rows = #board[1]
-  tClasses.boardTile.base.width = tileWidth
-  tClasses.boardTile.base.height = tileHeight
 end
+
+loadBoard(tLevels[1], board)
 
 --Render play board
 board.group = display.newGroup()
 board.container:insert(board.group)
 board.group.anchorChildren = true
 do
-  local tileClass = tClasses.boardTile.blank
-  local width = tClasses.boardTile.base.width
-  local height = tClasses.boardTile.base.height
+  local width = tileWidth
+  local height = tileHeight
   for iC = 1,board.columns do
     for iR = 1,board.rows do
       local tile = board[iC][iR]
@@ -247,8 +243,7 @@ do
 end
 
 --Render player
-player = tClasses.entity.player:new(board.spawnColumn, board.spawnRow)
-player:render(nil,nil,board.container)
+player = tClasses.entity.player:new(board.spawnColumn, board.spawnRow, board.container)
 
 --[[------------------------------------------------------------------------------
 Interactivity
