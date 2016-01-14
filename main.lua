@@ -45,6 +45,7 @@ do
   local classFolder = "Classes"
   local imageFolder = "Images"
   local levelFolder = "Levels"
+  local APIFolder = "APIs"
   local lfs = require("lfs")
 
   local getFiles
@@ -75,6 +76,38 @@ do
       end
     end
   end
+  
+  --Load APIs
+  processFiles(
+    getFiles(APIFolder),
+    _G,
+    function(tTable, sFilename, sPath)
+      tTable[sFilename:match("(.-)%.lua$").."API"] = require(sPath:gsub("[/\\]","."):match("(.-)%.lua$")) --require uses '.' instead of '\'
+    end
+  )
+  
+    --Process image filepaths
+  processFiles(
+    getFiles(imageFolder),
+    tImages,
+    function(tTable, sFilename, sPath)
+      tTable[sFilename:match("(.-)[@%dx]*%..-$")] = sPath --strip file extension and resolution suffix
+    end
+  )
+  
+  --Load classes
+  local fileFunc = function(tTable, sFilename, sPath)
+    tTable[sFilename:match("(.-)%.lua$")] = require(sPath:gsub("[/\\]","."):match("(.-)%.lua$"))
+  end
+  for k,v in pairs(getFiles(classFolder)) do
+    tClasses[k] = {}
+    fileFunc(tClasses[k], "base.lua", v["base.lua"]) --Base class must be loaded first
+    processFiles(
+      v,
+      tClasses[k],
+      fileFunc
+    )
+  end
 
 --Process level filepaths
   processFiles(
@@ -88,29 +121,6 @@ do
       end
     end
   )
-
---Process image filepaths
-  processFiles(
-    getFiles(imageFolder),
-    tImages,
-    function(tTable, sFilename, sPath)
-      tTable[sFilename:match("(.-)[@%dx]*%..-$")] = sPath --strip file extension and resolution suffix
-    end
-  )
-
---Load classes
-  local fileFunc = function(tTable, sFilename, sPath)
-    tTable[sFilename:match("(.-)%.lua$")] = require(sPath:gsub("[/\\]","."):match("(.-)%.lua$")) --require uses '.' instead of '\'
-  end
-  for k,v in pairs(getFiles(classFolder)) do
-    tClasses[k] = {}
-    fileFunc(tClasses[k], "base.lua", v["base.lua"]) --Base class must be loaded first
-    processFiles(
-      v,
-      tClasses[k],
-      fileFunc
-    )
-  end
 end
 
 --[[------------------------------------------------------------------------------
@@ -250,52 +260,39 @@ player = tClasses.entity.player:new(board.spawnColumn, board.spawnRow, board.con
 --[[------------------------------------------------------------------------------
 Interactivity
 --------------------------------------------------------------------------------]]
-
-gui.controlRight.button2:addEventListener(
-  "touch",
-  function(event)
-    while event.phase == "began" do
-      player:tryMove(1)
-    end
+buttonAPI.hold(
+  gui.controlLeft.button1,
+  function()
+    player:tryMove(0,-1)
   end
 )
-gui.controlLeft.button2:addEventListener(
-  "touch",
-  function(event)
-    if event.phase == "began" then
-      player:tryMove(-1)
-    end
+buttonAPI.hold(
+  gui.controlLeft.button2,
+  function()
+    player:tryMove(-1,0)
   end
 )
-gui.controlLeft.button1:addEventListener(
-  "touch",
-  function(event)
-    if event.phase == "began" then
-      player:tryMove(nil,-1)
-    end
+buttonAPI.hold(
+  gui.controlLeft.button3,
+  function()
+    player:tryMove(0,1)
   end
 )
-gui.controlLeft.button3:addEventListener(
-  "touch",
-  function(event)
-    if event.phase == "began" then
-      player:tryMove(nil,1)
-    end
+buttonAPI.hold(
+  gui.controlRight.button1,
+  function()
+    player:tryMove(0,-1)
   end
 )
-gui.controlRight.button1:addEventListener(
-  "touch",
-  function(event)
-    if event.phase == "began" then
-      player:tryMove(nil,-1)
-    end
+buttonAPI.hold(
+  gui.controlRight.button2,
+  function()
+    player:tryMove(1,0)
   end
 )
-gui.controlRight.button3:addEventListener(
-  "touch",
-  function(event)
-    if event.phase == "began" then
-      player:tryMove(nil,1)
-    end
+buttonAPI.hold(
+  gui.controlRight.button3,
+  function()
+    player:tryMove(0,1)
   end
 )
