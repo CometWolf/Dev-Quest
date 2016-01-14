@@ -39,7 +39,7 @@ do
     end
     return tTable
   end
-  
+
   local processFiles
   processFiles = function(readTable, writeTable, fileFunc)
     for filename, path in pairs(readTable) do
@@ -51,24 +51,7 @@ do
       end
     end
   end
-<<<<<<< HEAD
-  findImages(imageFolder,tImages)
 
-  local loadClass
-  loadClass = function(sPath,tTable)
-    local tFile = {}
-    local tDir = {}
-    for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then
-        local filePath = sPath.."/"..fileName
-        if lfs.attributes(filePath,"mode") == "directory" then
-          tDir[fileName] = filePath
-        else
-          fileName = fileName:match("(.+)%..-$") --strip file extension
-          tFile[fileName] = sPath:gsub("/","\.").."."..fileName --require uses '.' instead of "/" ...WTF!?
-        end
-=======
-  
 --Process level filepaths
   processFiles(
     getFiles(levelFolder),
@@ -78,11 +61,10 @@ do
       if sFilename then
         local num = tonumber(sFilename)
         tTable[num and num or sFilename] = sPath
->>>>>>> origin/master
       end
     end
   )
-  
+
 --Process image filepaths
   processFiles(
     getFiles(imageFolder),
@@ -256,9 +238,12 @@ do
       if tile.type == "spawn" then
         board.spawnColumn = iC
         board.spawnRow = iR
+      end
       board[iC][iR] = tile
     end
   end
+  board.spawnColumn = board.spawnColumn or 2
+  board.spawnRow = board.spawnRow or 2
 end
 
 --Render player
