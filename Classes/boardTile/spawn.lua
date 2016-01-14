@@ -21,5 +21,6 @@ class.objMt = {
 
 class.texture = tImages.blankTile
 class.type = "spawn"
+class.char = "s"
 
 return class

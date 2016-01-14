@@ -62,7 +62,7 @@ do
     local tFile = {}
     local tDir = {}
     for fileName in lfs.dir(sPath) do
-      if fileName ~= "." and fileName ~= ".." then  
+      if fileName ~= "." and fileName ~= ".." then
         local filePath = sPath.."/"..fileName
         if lfs.attributes(filePath,"mode") == "directory" then
           tDir[fileName] = filePath
@@ -234,13 +234,16 @@ do
     for iR = 1,board.rows do
       local tile = board[iC][iR]:new()
       tile:render((iC-1)*width, (iR-1)*height, board.group)
+      if tile.type == "spawn" then
+        board.spawnColumn = iC
+        board.spawnRow = iR
       board[iC][iR] = tile
     end
   end
 end
 
 --Render player
-player = tClasses.entity.player:new(2,2)
+player = tClasses.entity.player:new(board.spawnColumn, board.spawnRow)
 player:render(nil,nil,board.container)
 
 --[[------------------------------------------------------------------------------
