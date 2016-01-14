@@ -17,12 +17,13 @@ class.objMt = {
   end
 }
 
-class.texture = tImages.blankTile
+class.texture = tImages.iceTile
 class.type = "ice"
+class.char = "i"
 
---public methods 
+--Public methods 
 function class:enter(entity,nMotionX,nMotionY)
-  return entity.grip or enity:move(nMotionX*2,nMotionY*2)
+  return entity.grip, nMotionX > 0 and 1 or nMotionX < 0 and -1 or 0, nMotionY > 0 and 1 or nMotionY < 0 and -1 or 0
 end
 
 return class

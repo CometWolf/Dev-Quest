@@ -22,7 +22,11 @@ class.type = "player"
 class.pickupItems = true
 
 --public methods
-function class:move(nColumn, nRow)
+function class:move(nColumn, nRow, bAbsolute)
+  if not bAbsolute then
+    nColumn = self.column+nColumn
+    nRow = self.row+nRow
+  end
   if nRow ~= self.row then
     if nRow <= board.view.middleRow then
       self.y = (nRow-1)*board.tileHeight
@@ -43,7 +47,7 @@ function class:move(nColumn, nRow)
     end
     self.column = nColumn
   end
-  local tile = board.group[nColumn][nRow]
+  local tile = board[nColumn][nRow]
   tile.entity = player
   self.tile = tile
 end

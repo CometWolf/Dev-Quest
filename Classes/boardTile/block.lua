@@ -21,7 +21,7 @@ class.texture = tImages.blockTile
 class.type = "block"
 class.char = "x"
 
---public methods 
+--Public methods 
 function class:enter(entity,nMotionX,nMotionY)
   return false
 end

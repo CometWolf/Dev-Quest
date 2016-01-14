@@ -41,16 +41,29 @@ function class:checkMove(nColumn, nRow, bAbsolute)
     nRow = math.max(1, self.row + nRow)
     nColumn = math.max(1, self.column + nColumn)
   end
-  return board[nColumn][nRow]:enter(self),nColumn,nRow
+  local motionX = nColumn-self.column
+  local motionY = nRow-self.row
+  local allowMove, columnOffset, rowOffset = board[nColumn][nRow]:enter(self,motionX,motionY)
+  columnOffset = columnOffset or 0
+  rowOffset = rowOffset or 0
+  if allowMove then
+    return allowMove
+  elseif nColumn == 0 and nRow == 0 then
+    return false, 0, 0
+  else
+    return allowMove, columnOffset+(bAbsolute and  nColumn or 0), rowOffset+(bAbsolute and nRow or 0)
+  end
 end
 
 function class:tryMove(nColumn, nRow, bAbsolute)
-  local move, column, row = self:checkMove(nColumn, nRow, bAbsolute)
-  if move then
-    self:move(column,row)
-    return true
+  local allowed, newColumn, newRow
+  allowed, newColumn, newRow = self:checkMove(nColumn, nRow, bAbsolute)
+  if allowed then
+    self:move(nColumn, nRow, bAbsolute)
+  elseif newColumn ~= 0 or newRow ~= 0 then
+    self:move(nColumn, nRow, bAbsolute)
+    self:tryMove(newColumn, newRow, bAbsolute)
   end
-  return false
 end
 
 function class:addItem(item,nAmount)
