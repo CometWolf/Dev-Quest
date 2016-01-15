@@ -33,4 +33,12 @@ function class:enter(entity,nMotionX,nMotionY)
   return true
 end
 
+function class:inside(entity,nMotionX,nMotionY)
+  return true
+end
+
+function class:leave(entity,nMotionX,nMotionY)
+  return true
+end
+
 return class

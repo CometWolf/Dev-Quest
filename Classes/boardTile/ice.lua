@@ -25,10 +25,11 @@ class.friction = 0
 --Public methods 
 function class:enter(entity,nMotionX,nMotionY)
   if not entity.grip then
-    entity.accelerationX = (nMotionX > 0 and 1 or nMotionX < 0 and -1 or 0)
-    entity.accelerationY = (nMotionY > 0 and 1 or nMotionY < 0 and -1 or 0)
+    entity.accelerationX = entity.accelerationX == 0 and (nMotionX > 0 and 1 or nMotionX < 0 and -1) or entity.accelerationX
+    entity.accelerationY = entity.accelerationY == 0 and (nMotionY > 0 and 1 or nMotionY < 0 and -1) or entity.accelerationY
   end
   return true
 end
+class.inside = class.enter
 
 return class

@@ -39,6 +39,7 @@ function class:new(nColumn, nRow, parent)
       local velY = obj.velocityY+accY
       local friction = obj.tile.friction
       local motionX,motionY
+      print(accX,accY)
       if velX ~= 0 then
         if velX > 0 then
           motionX = velX > obj.speedX and obj.speedX or velX
@@ -111,7 +112,6 @@ function class:tryMove(nX,nY, bAbsolute)
     nX = selfX+(nX or 0)
     nY = selfY+(nY or 0)
   end
-  print(nX,nY)
   local column = math.floor(nX/tileWidth)+1
   local row = math.floor(nY/tileHeight)+1
   local motionX = nX-selfX
@@ -119,17 +119,16 @@ function class:tryMove(nX,nY, bAbsolute)
   local tile = board[column][row]
   if tile ~= self.tile then
     print("Entering: "..tile.type)
-    if not tile:enter(self,motionX,motionY) then
-      self.velocityX = 0
-      self.velocityY = 0
+    if not tile:enter(self,motionX,motionY) or not self.tile:leave(self,motionX,motionY) then
       return false
     end
     self.tile = tile
     tile.entity = self
     self:move(nX, nY, true)
-  else
+  elseif tile:inside(self,motionX,motionY) then
     self:move(nX, nY, true)
   end
+  return true
 end
 
 function class:addItem(item,nAmount)
