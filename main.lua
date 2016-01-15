@@ -198,10 +198,6 @@ do
       for char in line:gmatch"." do
         columns = column > columns and column or columns
         local tileClass = tTileChar[char]
-        if tileClass.type == tClasses.boardTile.spawn.type then
-          load.spawnColumn = column
-          load.spawnRow = row
-        end
         load[column] = load[column] or {}
         load[column][row] = tileClass
         column = column+1
@@ -266,7 +262,7 @@ buttonAPI.hold(
     if player.inMotion then
       return
     end
-    player.accelerationY = player.accelerationY-1
+    player.accelerationY = player.accelerationY-player.speedY
     player.computePhysics()
   end
 )
@@ -276,7 +272,7 @@ buttonAPI.hold(
     if player.inMotion then
       return
     end
-    player.accelerationX = player.accelerationX-1
+    player.accelerationX = player.accelerationX-player.speedX
     player.computePhysics()
   end
 )
@@ -286,7 +282,7 @@ buttonAPI.hold(
     if player.inMotion then
       return
     end
-    player.accelerationY = player.accelerationY+1
+    player.accelerationY = player.accelerationY+player.speedY
     player.computePhysics()
   end
 )
@@ -296,7 +292,7 @@ buttonAPI.hold(
     if player.inMotion then
       return
     end
-    player.accelerationY = player.accelerationY-1
+    player.accelerationY = player.accelerationY-player.speedY
     player.computePhysics()
   end
 )
@@ -306,7 +302,7 @@ buttonAPI.hold(
     if player.inMotion then
       return
     end
-    player.accelerationX = player.accelerationX+1
+    player.accelerationX = player.accelerationX+player.speedX
     player.computePhysics()
   end
 )
@@ -316,7 +312,7 @@ buttonAPI.hold(
     if player.inMotion then
       return
     end
-    player.accelerationY = player.accelerationY+1
+    player.accelerationY = player.accelerationY+player.speedY
     player.computePhysics()
   end
 )

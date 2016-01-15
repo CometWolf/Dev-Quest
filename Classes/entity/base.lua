@@ -10,9 +10,7 @@ local transitionMoveTo = transition.moveTo
 class.objMt = {__index = class} --metatable for created objects
 class.width = tileHeight
 class.height = tileWidth
-class.moveTime = math.ceil(1000/display.fps)
-class.moveX = 1
-class.moveY = 1
+class.moveTime = math.ceil(1000/(display.fps*2))
 class.velocityX = 0 --mass = 1, momentum = velocity
 class.velocityY = 0
 class.speedX = 1
@@ -39,7 +37,6 @@ function class:new(nColumn, nRow, parent)
       local velY = obj.velocityY+accY
       local friction = obj.tile.friction
       local motionX,motionY
-      print(accX,accY)
       if velX ~= 0 then
         if velX > 0 then
           motionX = velX > obj.speedX and obj.speedX or velX
@@ -118,7 +115,6 @@ function class:tryMove(nX,nY, bAbsolute)
   local motionY = nY-selfY
   local tile = board[column][row]
   if tile ~= self.tile then
-    print("Entering: "..tile.type)
     if not tile:enter(self,motionX,motionY) or not self.tile:leave(self,motionX,motionY) then
       return false
     end
