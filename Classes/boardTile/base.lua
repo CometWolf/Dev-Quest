@@ -7,6 +7,7 @@ local class = {}
 class.objMt = {__index = class} --metatable for created objects
 class.width = tileWidth
 class.height = tileHeight
+class.friction = 1
 
 --Class methods
 function class:new(nColumn, nRow, parent)
@@ -15,7 +16,6 @@ function class:new(nColumn, nRow, parent)
     column = nColumn,
     row = nRow,
   }
-  print()
   obj.disp.x = (nColumn-1)*self.width
   obj.disp.y = (nRow-1)*self.height
   if parent then
@@ -30,7 +30,7 @@ end
 
 --Public methods
 function class:enter(entity,nMotionX,nMotionY)
-  return true, 0, 0
+  return true
 end
 
 return class

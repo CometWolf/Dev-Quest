@@ -263,36 +263,60 @@ Interactivity
 buttonAPI.hold(
   gui.controlLeft.button1,
   function()
-    player:tryMove(0,-1)
+    if player.inMotion then
+      return
+    end
+    player.accelerationY = player.accelerationY-1
+    player.computePhysics()
   end
 )
 buttonAPI.hold(
   gui.controlLeft.button2,
   function()
-    player:tryMove(-1,0)
+    if player.inMotion then
+      return
+    end
+    player.accelerationX = player.accelerationX-1
+    player.computePhysics()
   end
 )
 buttonAPI.hold(
   gui.controlLeft.button3,
   function()
-    player:tryMove(0,1)
+    if player.inMotion then
+      return
+    end
+    player.accelerationY = player.accelerationY+1
+    player.computePhysics()
   end
 )
 buttonAPI.hold(
   gui.controlRight.button1,
   function()
-    player:tryMove(0,-1)
+    if player.inMotion then
+      return
+    end
+    player.accelerationY = player.accelerationY-1
+    player.computePhysics()
   end
 )
 buttonAPI.hold(
   gui.controlRight.button2,
   function()
-    player:tryMove(1,0)
+    if player.inMotion then
+      return
+    end
+    player.accelerationX = player.accelerationX+1
+    player.computePhysics()
   end
 )
 buttonAPI.hold(
   gui.controlRight.button3,
   function()
-    player:tryMove(0,1)
+    if player.inMotion then
+      return
+    end
+    player.accelerationY = player.accelerationY+1
+    player.computePhysics()
   end
 )

@@ -24,57 +24,26 @@ class.pickupItems = true
 --Class methods
 function class:new(nColumn, nRow, parent)
   local obj = tClasses.entity.base.new(class, nColumn, nRow, parent)
-  obj.playX = obj.x
-  obj.playY = obj.y
+  obj.boardX = obj.disp.x
+  obj.boardY = obj.disp.y
   if obj.disp.x > board.view.middleX then
-    board.group.x = board.view.middleX-obj.x
+    board.group.x = board.view.middleX-obj.disp.x
     obj.disp.x = board.view.middleX
   end
-  if obj.y > board.view.middleY then
-    board.group.y = board.view.middleY-obj.y
-    obj.y = board.view.middleY
+  if obj.disp.y > board.view.middleY then
+    board.group.y = board.view.middleY-obj.disp.y
+    obj.disp.y = board.view.middleY
   end
   return obj
 end
 
---public methods
--- function class:move(nColumn, nRow, bAbsolute)
---   if not bAbsolute then
---     nColumn = self.column+nColumn
---     nRow = self.row+nRow
---   end
---   if nRow ~= self.row then
---     if nRow <= board.view.middleRow then
---       self.y = (nRow-1)*tileHeight
---       board.group.y = 0
---     else
---       self.y = (board.view.middleRow-1)*tileHeight
---       board.group.y = (board.view.middleRow-nRow)*tileHeight
---     end
---     self.row = nRow
---   end
---   if nColumn ~= self.column then
---     if nColumn <= board.view.middleColumn then
---       self.x = (nColumn-1)*tileWidth
---       board.group.x = 0
---     else
---       self.x = (board.view.middleColumn-1)*tileWidth
---       board.group.x = (board.view.middleColumn-nColumn)*tileWidth
---     end
---     self.column = nColumn
---   end
---   local tile = board[nColumn][nRow]
---   tile.entity = player
---   self.tile = tile
--- end
-
 function class:move(nX, nY, bAbsolute)
   if not bAbsolute then
-    nX = nX and nX ~= 0 and self.playX+nX
-    nY = nY and nY ~= 0 and self.playY+nY
+    nX = nX and nX ~= 0 and self.boardX+nX
+    nY = nY and nY ~= 0 and self.boardY+nY
   else
-    nX = nX ~= self.playX and nX
-    nY = nY ~= self.playY and nY
+    nX = nX ~= self.boardX and nX
+    nY = nY ~= self.boardY and nY
   end
   local groupX = nX and board.view.middleX-nX or 0
   local groupY = nY and board.view.middleY-nY or 0
@@ -89,15 +58,15 @@ function class:move(nX, nY, bAbsolute)
         x = groupX,
         y = groupY,
         time = self.moveTime, 
-        onComplete = self.motionComplete
+        onComplete = self.computePhysics
       }
     )
-    self.playX = nX and nX or self.playX
-    self.playY = nY and nY or self.playY
+    self.boardX = nX and nX or self.boardX
+    self.boardY = nY and nY or self.boardY
   else
     self:motion(nX,nY,true)
-    self.playX = nX and nX or self.playX
-    self.playY = nY and nY or self.playY
+    self.boardX = nX and nX or self.boardX
+    self.boardY = nY and nY or self.boardY
   end
 end
 

@@ -13,8 +13,12 @@ class.height = tileWidth
 class.moveTime = math.ceil(1000/display.fps)
 class.moveX = 1
 class.moveY = 1
-class.momentumX = 0
-class.momentumY = 0
+class.velocityX = 0 --mass = 1, momentum = velocity
+class.velocityY = 0
+class.speedX = 1
+class.speedY = 1
+class.accelerationX = 0
+class.accelerationY = 0
 
 --Class methods
 function class:new(nColumn, nRow, parent)
@@ -27,19 +31,43 @@ function class:new(nColumn, nRow, parent)
     row = nRow,
     tile = board[nColumn][nRow],
     inMotion = false,
-    motionComplete = function()
+    computePhysics = function()
       obj.inMotion = false
-      local momX = obj.momentumX > 0 and 1 or obj.momentumX < 0 and -1
-      local momY = obj.momentumY > 0 and 1 or obj.momentumY < 0 and -1
-      if momX or momY then
-        obj.momentumX = obj.momentumX-((momX or 0)*obj.moveX)
-        obj.momentumY = obj.momentumY-((momY or 0)*obj.moveY)
-        obj:tryMove(momX,momY)
+      local accX = obj.accelerationX
+      local accY = obj.accelerationY
+      local velX = obj.velocityX+accX
+      local velY = obj.velocityY+accY
+      local friction = obj.tile.friction
+      local motionX,motionY
+      if velX ~= 0 then
+        if velX > 0 then
+          motionX = velX > obj.speedX and obj.speedX or velX
+          obj.accelerationX = accX > friction and accX-friction or 0
+        else
+          motionX = velX < -obj.speedX and -obj.speedX or velX
+          obj.accelerationX = accX < -friction and accX+friction or 0
+        end
+        obj.velocityX = velX-motionX
+      end
+      if velY ~= 0 then
+        if velY > 0 then
+          motionY = velY > obj.speedY and obj.speedY or velY
+          obj.accelerationY = accY > friction and accY-friction or 0
+        else
+          motionY = velY < -obj.speedY and -obj.speedY or velY
+          obj.accelerationY = accY < -friction and accY+friction or 0
+        end
+        obj.velocityY = velY-motionY
+      end
+      if motionX or motionY then
+        obj:tryMove(motionX, motionY)
       end
     end
   }
-  obj.disp.x = (nColumn-1)*tileWidth
-  obj.disp.y = (nRow-1)*tileHeight
+  obj.disp.x = (nColumn-1)*tileWidth+tileWidth*0.5
+  obj.disp.y = (nRow-1)*tileHeight+tileHeight*0.5
+  obj.disp.anchorX = 0.5
+  obj.disp.anchorY = 0.5
   if parent then
     parent:insert(obj.disp)
   end
@@ -57,16 +85,16 @@ function class:motion(nX, nY, bAbsolute)
     return false
   end
   if not bAbsolute then
-    nX = self.x+(nX and nX or 0)
-    nY = self.x+(nY and nY or 0)
+    nX = nX and (self.boardX or self.disp.x) + nX
+    nY = nY and (self.boardY or self.disp.y) + nY
   end
   self.inMotion = transitionMoveTo(
-    self,
+    self.disp,
     {
       x = nX,
       y = nY,
       time = self.moveTime, 
-      onComplete = self.motionComplete
+      onComplete = self.computePhysics
     }
   )
 end
@@ -75,27 +103,30 @@ function class:tryMove(nX,nY, bAbsolute)
   if self.inMotion then
     return
   end
+  local selfX,selfY = self.boardX or self.disp.x, self.boardY or self.disp.y --player class stores it's location on the board in boardX and boardY
   if bAbsolute then
-    nX = nX or self.x-board.group.x
-    nY = nY or self.y-board.group.y
+    nX = nX or selfX
+    nY = nY or selfY
   else
-    nX = self.x-board.group.x+(nX or 0)
-    nY = self.y-board.group.y+(nY or 0)
+    nX = selfX+(nX or 0)
+    nY = selfY+(nY or 0)
   end
+  print(nX,nY)
   local column = math.floor(nX/tileWidth)+1
   local row = math.floor(nY/tileHeight)+1
-  local motionX = nX-self.x+board.group.x
-  local motionY = nY-self.y+board.group.y
+  local motionX = nX-selfX
+  local motionY = nY-selfY
   local tile = board[column][row]
   if tile ~= self.tile then
+    print("Entering: "..tile.type)
     if not tile:enter(self,motionX,motionY) then
-      self.momentumX = 0
-      self.momentumY = 0
+      self.velocityX = 0
+      self.velocityY = 0
       return false
     end
-    self:move(nX, nY, true)
     self.tile = tile
     tile.entity = self
+    self:move(nX, nY, true)
   else
     self:move(nX, nY, true)
   end
