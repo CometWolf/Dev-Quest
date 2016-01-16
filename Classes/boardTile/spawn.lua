@@ -4,6 +4,7 @@
 local class = tClasses.boardTile.base:inherit()
 
 --Public properties
+class.objMt = {__index = class}
 class.texture = tImages.blankTile
 class.type = "spawn"
 class.char = "s"
