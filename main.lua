@@ -82,7 +82,7 @@ do
     getFiles(APIFolder),
     _G,
     function(tTable, sFilename, sPath)
-      tTable[sFilename:match("(.-)%.lua$").."API"] = require(sPath:gsub("[/\\]","."):match("(.-)%.lua$")) --require uses '.' instead of '\'
+      tTable[sFilename:match("(.-)%.lua$").."API"] = require(sPath:gsub("[/\\]","."):sub(1,-5)) --require uses '.' instead of '\'
     end
   )
   
@@ -97,7 +97,7 @@ do
   
   --Load classes
   local fileFunc = function(tTable, sFilename, sPath)
-    tTable[sFilename:match("(.-)%.lua$")] = require(sPath:gsub("[/\\]","."):match("(.-)%.lua$"))
+    tTable[sFilename:match("(.-)%.lua$")] = require(sPath:gsub("[/\\]","."):sub(1,-5))
   end
   for k,v in pairs(getFiles(classFolder)) do
     tClasses[k] = {}
@@ -199,10 +199,30 @@ do
         columns = column > columns and column or columns
         local tileClass = tTileChar[char]
         load[column] = load[column] or {}
-        load[column][row] = tileClass
+        load[column][row] = {
+          tileClass = tileClass
+        }
         column = column+1
       end
       row = row+1
+    end
+    
+    local row = 1
+    sPath = sPath:gsub("%.lvl",".ent")
+    file,err = io.open(sPath)
+    if file then
+      local tEntity = require(sPath:gsub("[/\\]","."):sub(1,-5))
+      for line in file:lines() do
+        local column = 1
+        for char in line:gmatch"." do
+          if char ~= " " then
+            load[column][row].entityClass = tClasses.entity[tEntity[char].type]
+            load[column][row].entityAi = tEntity[char].ai
+          end
+          column = column+1
+        end
+        row = row+1
+      end
     end
     load.columns = columns
     load.rows = rows
@@ -245,7 +265,23 @@ do
   local height = tileHeight
   for iC = 1,board.columns do
     for iR = 1,board.rows do
-      board[iC][iR] = board[iC][iR]:new(iC, iR, board.group)
+      local tile = board[iC][iR]
+      local boardTile = tile.tileClass:new(iC, iR, board.group)
+      boardTile.disp:toBack()
+      board[iC][iR] = boardTile
+      local entity = tile.entityClass and tile.entityClass:new(iC, iR, board.group)
+      local ai = tile.entityAi
+      if entity then
+        boardTile.entity[entity] = entity
+        if ai then
+          Runtime:addEventListener(
+            "enterFrame",
+            function()
+              ai(entity)
+            end
+          )
+        end
+      end
     end
   end
 end
@@ -259,60 +295,42 @@ Interactivity
 buttonAPI.hold(
   gui.controlLeft.button1,
   function()
-    if player.inMotion then
-      return
-    end
-    player.accelerationY = player.accelerationY-player.speedY
-    player.computePhysics()
+    player.velocityY = player.velocityY-player.speed
+    player:queueMotion()
   end
 )
 buttonAPI.hold(
   gui.controlLeft.button2,
   function()
-    if player.inMotion then
-      return
-    end
-    player.accelerationX = player.accelerationX-player.speedX
-    player.computePhysics()
+    player.velocityX = player.velocityX-player.speed
+    player:queueMotion()
   end
 )
 buttonAPI.hold(
   gui.controlLeft.button3,
   function()
-    if player.inMotion then
-      return
-    end
-    player.accelerationY = player.accelerationY+player.speedY
-    player.computePhysics()
+    player.velocityY = player.velocityY+player.speed
+    player:queueMotion()
   end
 )
 buttonAPI.hold(
   gui.controlRight.button1,
   function()
-    if player.inMotion then
-      return
-    end
-    player.accelerationY = player.accelerationY-player.speedY
-    player.computePhysics()
+    player.velocityY = player.velocityY-player.speed
+    player:queueMotion()
   end
 )
 buttonAPI.hold(
   gui.controlRight.button2,
   function()
-    if player.inMotion then
-      return
-    end
-    player.accelerationX = player.accelerationX+player.speedX
-    player.computePhysics()
+    player.velocityX = player.velocityX+player.speed
+    player:queueMotion()
   end
 )
 buttonAPI.hold(
   gui.controlRight.button3,
   function()
-    if player.inMotion then
-      return
-    end
-    player.accelerationY = player.accelerationY+player.speedY
-    player.computePhysics()
+    player.velocityY = player.velocityY+player.speed
+    player:queueMotion()
   end
 )

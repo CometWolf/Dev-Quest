@@ -15,7 +15,7 @@ function class:new(nColumn, nRow, parent)
   local obj = tClasses.boardTile.base.new(class, nColumn, nRow, parent)
   obj.disp.anchorX = 1
   obj.disp.anchorY = 1
-  transition.to( obj.disp, {rotation = 180})
+  transition.to( obj.disp, {rotation = 180, time = 0})
   return obj
 end
 

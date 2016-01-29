@@ -4,22 +4,12 @@
 local class = tClasses.entity.base:inherit()
 
 --Public properties
-class.objMt = {
-  __index = function(t,k)
-    return t.disp[k] or class[k]
-  end,
-  __newindex = function(t,k,v)
-    if t.disp[k] ~= nil then
-      t.disp[k] = v
-    else
-      rawset(t,k,v)
-    end
-  end
-}
-
+class.objMt = {__index = class}
 class.texture = tImages.player
 class.type = "player"
 class.pickupItems = true
+class.height = false
+class.width = false
 
 --Class methods
 function class:new(nColumn, nRow, parent)
@@ -52,7 +42,7 @@ function class:move(nX, nY, bAbsolute)
   if groupX or groupY  then
     self.disp.x = groupX and board.view.middleX or self.disp.x
     self.disp.y = groupY and board.view.middleY or self.disp.y
-    self.inMotion = transition.moveTo(
+    transition.moveTo(
       board.group,
       {
         x = groupX,
@@ -61,13 +51,16 @@ function class:move(nX, nY, bAbsolute)
         onComplete = self.computePhysics
       }
     )
-    self.boardX = nX and nX or self.boardX
-    self.boardY = nY and nY or self.boardY
+    if not groupX then
+      self:motion(nX,nil,true)
+    elseif groupX and not groupY then
+      self:motion(nil,nY,true)
+    end
   else
     self:motion(nX,nY,true)
-    self.boardX = nX and nX or self.boardX
-    self.boardY = nY and nY or self.boardY
   end
+  self.boardX = nX and nX or self.boardX
+  self.boardY = nY and nY or self.boardY
 end
 
 return class

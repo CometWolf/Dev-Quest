@@ -8,59 +8,76 @@ local transitionMoveTo = transition.moveTo
 
 --Public properties
 class.objMt = {__index = class} --metatable for created objects
-class.width = tileHeight
-class.height = tileWidth
-class.moveTime = math.ceil(1000/(display.fps*2))
+class.moveTime = math.ceil(1000/(display.fps))
 class.velocityX = 0 --mass = 1, momentum = velocity
 class.velocityY = 0
-class.speedX = 1
-class.speedY = 1
+class.speed = math.round((tileWidth+tileHeight)/30)
 class.accelerationX = 0
 class.accelerationY = 0
+class.height = tileHeight/2
+class.width = tileWidth/2
+class.interaction = {}
+class.reaction = {}
+class.motionQueue = {
+  ids = {
+    
+  }
+},
+Runtime:addEventListener(
+  "enterFrame",
+  function()
+    local motionQueue = class.motionQueue
+    for i=1,#motionQueue do
+      local motion = table.remove(motionQueue,1)
+      motionQueue.ids[motion.id] = nil
+      local entity = motion.entity
+      if motion.func then
+        motion.func(entity)
+      end
+      local accX = entity.accelerationX
+      local accY = entity.accelerationY
+      local velX = entity.velocityX+accX
+      local velY = entity.velocityY+accY
+      local friction = entity.tile.friction*entity.speed
+      local motionX,motionY
+      if velX ~= 0 then
+        if velX > 0 then
+          motionX = velX > entity.speed and entity.speed or velX
+          entity.accelerationX = accX > friction and accX-friction or 0
+        else
+          motionX = velX < -entity.speed and -entity.speed or velX
+          entity.accelerationX = accX < -friction and accX+friction or 0
+        end
+        entity.velocityX = velX-motionX
+      end
+      if velY ~= 0 then
+        if velY > 0 then
+          motionY = velY > entity.speed and entity.speed or velY
+          entity.accelerationY = accY > friction and accY-friction or 0
+        else
+          motionY = velY < -entity.speed and -entity.speed or velY
+          entity.accelerationY = accY < -friction and accY+friction or 0
+        end
+        entity.velocityY = velY-motionY
+      end
+      if motionX or motionY then
+        entity:tryMove(motionX,motionY)
+        entity:queueMotion()
+      end
+    end
+  end
+)
 
 --Class methods
 function class:new(nColumn, nRow, parent)
   local obj
   obj = {
     --instance properties
-    disp = display.newImageRect(self.texture, self.width, self.height),
+    disp = self.height and self.width and display.newImageRect(self.texture, self.height, self.width) or display.newImage(self.texture),
     inventory = {},
     column = nColumn,
     row = nRow,
     tile = board[nColumn][nRow],
-    inMotion = false,
-    computePhysics = function()
-      obj.inMotion = false
-      local accX = obj.accelerationX
-      local accY = obj.accelerationY
-      local velX = obj.velocityX+accX
-      local velY = obj.velocityY+accY
-      local friction = obj.tile.friction
-      local motionX,motionY
-      if velX ~= 0 then
-        if velX > 0 then
-          motionX = velX > obj.speedX and obj.speedX or velX
-          obj.accelerationX = accX > friction and accX-friction or 0
-        else
-          motionX = velX < -obj.speedX and -obj.speedX or velX
-          obj.accelerationX = accX < -friction and accX+friction or 0
-        end
-        obj.velocityX = velX-motionX
-      end
-      if velY ~= 0 then
-        if velY > 0 then
-          motionY = velY > obj.speedY and obj.speedY or velY
-          obj.accelerationY = accY > friction and accY-friction or 0
-        else
-          motionY = velY < -obj.speedY and -obj.speedY or velY
-          obj.accelerationY = accY < -friction and accY+friction or 0
-        end
-        obj.velocityY = velY-motionY
-      end
-      if motionX or motionY then
-        obj:tryMove(motionX, motionY)
-      end
-    end
   }
   obj.disp.x = (nColumn-1)*tileWidth+tileWidth*0.5
   obj.disp.y = (nRow-1)*tileHeight+tileHeight*0.5
@@ -79,28 +96,32 @@ end
 --Public methods
 
 function class:motion(nX, nY, bAbsolute)
-  if self.inMotion then
-    return false
-  end
   if not bAbsolute then
     nX = nX and (self.boardX or self.disp.x) + nX
     nY = nY and (self.boardY or self.disp.y) + nY
   end
-  self.inMotion = transitionMoveTo(
+  transitionMoveTo(
     self.disp,
     {
       x = nX,
       y = nY,
-      time = self.moveTime, 
-      onComplete = self.computePhysics
+      time = self.moveTime
     }
   )
 end
 
-function class:tryMove(nX,nY, bAbsolute)
-  if self.inMotion then
-    return
+function class:move(nX, nY, bAbsolute)
+  if not bAbsolute then
+    nX = nX and nX ~= 0 and self.disp.x+nX
+    nY = nY and nY ~= 0 and self.disp.y+nY
+  else
+    nX = nX ~= self.disp.x and nX
+    nY = nY ~= self.disp.y and nY
   end
+  self:motion(nX,nY,true)
+end
+
+function class:tryMove(nX,nY, bAbsolute)
   local selfX,selfY = self.boardX or self.disp.x, self.boardY or self.disp.y --player class stores it's location on the board in boardX and boardY
   if bAbsolute then
     nX = nX or selfX
@@ -118,13 +139,42 @@ function class:tryMove(nX,nY, bAbsolute)
     if not tile:enter(self,motionX,motionY) or not self.tile:leave(self,motionX,motionY) then
       return false
     end
+    for i=-1,1 do
+      for j=-1,1 do
+        if not board[column+i][row+j]:entityInteraction(self,motionX,motionY) then
+          return false
+        end
+      end
+    end
+    self.tile.entity[self] = nil
     self.tile = tile
-    tile.entity = self
+    tile.entity[self] = self
     self:move(nX, nY, true)
   elseif tile:inside(self,motionX,motionY) then
+    for i=-1,1 do
+      for j=-1,1 do
+        if not board[column+i][row+j]:entityInteraction(self,motionX,motionY) then
+          return false
+        end
+      end
+    end
     self:move(nX, nY, true)
   end
   return true
+end
+
+function class:queueMotion(fMotion,id)
+  id = id or fMotion or self
+  if class.motionQueue.ids[id] then
+    return
+  end
+  local tMotion = {
+    func = fMotion,
+    id = id,
+    entity = self
+  }
+  class.motionQueue.ids[id] = tMotion
+  table.insert(class.motionQueue,tMotion)
 end
 
 function class:addItem(item,nAmount)
