@@ -14,6 +14,7 @@ class.width = false
 --Class methods
 function class:new(nColumn, nRow, parent)
   local obj = tClasses.entity.base.new(class, nColumn, nRow, parent)
+  player = obj --global
   obj.boardX = obj.disp.x
   obj.boardY = obj.disp.y
   if obj.disp.x > board.view.middleX then

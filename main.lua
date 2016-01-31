@@ -35,7 +35,7 @@ do
 end
 
 --[[------------------------------------------------------------------------------
-Game file loading
+File loading
 --------------------------------------------------------------------------------]]
 tClasses = {}
 tImages = {}
@@ -100,13 +100,17 @@ do
     tTable[sFilename:match("(.-)%.lua$")] = require(sPath:gsub("[/\\]","."):sub(1,-5))
   end
   for k,v in pairs(getFiles(classFolder)) do
-    tClasses[k] = {}
-    fileFunc(tClasses[k], "base.lua", v["base.lua"]) --Base class must be loaded first
-    processFiles(
-      v,
-      tClasses[k],
-      fileFunc
-    )
+    if type(v) == "table" then
+      tClasses[k] = {}
+      fileFunc(tClasses[k], "base.lua", v["base.lua"]) --Base class must be loaded first
+      processFiles(
+        v,
+        tClasses[k],
+        fileFunc
+      )
+    else
+      fileFunc(tClasses,k,v)
+    end
   end
 
 --Process level filepaths
@@ -176,118 +180,12 @@ end
 --[[------------------------------------------------------------------------------
 Play board
 --------------------------------------------------------------------------------]]
-do
-  local tTileChar = {}
-  for k,v in pairs(tClasses.boardTile) do
-    if v.char then
-      tTileChar[v.char] = v
-    end
-  end
 
-  function loadBoard(sPath, tTable)
-    local file,err = io.open(sPath)
-    if not file then
-      error(err)
-    end
-    local load = tTable or {}
-    local columns, rows = 0,0
-    local row = 1
-    for line in file:lines() do
-      rows = row > rows and row or rows
-      local column = 1
-      for char in line:gmatch"." do
-        columns = column > columns and column or columns
-        local tileClass = tTileChar[char]
-        load[column] = load[column] or {}
-        load[column][row] = {
-          tileClass = tileClass
-        }
-        column = column+1
-      end
-      row = row+1
-    end
-    
-    local row = 1
-    sPath = sPath:gsub("%.lvl",".ent")
-    file,err = io.open(sPath)
-    if file then
-      local tEntity = require(sPath:gsub("[/\\]","."):sub(1,-5))
-      for line in file:lines() do
-        local column = 1
-        for char in line:gmatch"." do
-          if char ~= " " then
-            load[column][row].entityClass = tClasses.entity[tEntity[char].type]
-            load[column][row].entityAi = tEntity[char].ai
-          end
-          column = column+1
-        end
-        row = row+1
-      end
-    end
-    load.columns = columns
-    load.rows = rows
-    load.spawnColumn = load.spawnColumn or 2
-    load.spawnRow = load.spawnRow or 2
-    return load
-  end
-end
-
---calculate playboard
-board = {}
-do
-  local width = screen.width-gui.controlLeft.width-gui.controlRight.width
-  local height = screen.height-gui.statusBar.height
-  local columns = math.floor(width/tileWidth)
-  local rows = math.floor(height/tileHeight)
-  local unusedX = math.floor(width%(tileWidth))
-  local unusedY = math.floor(height%(tileHeight))
-  board.container = display.newContainer(tileWidth*columns, tileHeight*rows)
-  board.container:toBack()
-  board.container.x = gui.controlLeft.edgeX+math.floor(unusedX/2)
-  board.container.y = gui.statusBar.bottomY+math.floor(unusedY/2)
-  board.container.anchorChildren = false
-  board.view = {
-    columns = columns,
-    rows = rows,
-    middleX = math.round(width/2),
-    middleY = math.round(height/2),
-  }
-end
-
-loadBoard(tLevels[1], board)
-
---Render play board
-board.group = display.newGroup()
-board.container:insert(board.group)
-board.group.anchorChildren = true
-do
-  local width = tileWidth
-  local height = tileHeight
-  for iC = 1,board.columns do
-    for iR = 1,board.rows do
-      local tile = board[iC][iR]
-      local boardTile = tile.tileClass:new(iC, iR, board.group)
-      boardTile.disp:toBack()
-      board[iC][iR] = boardTile
-      local entity = tile.entityClass and tile.entityClass:new(iC, iR, board.group)
-      local ai = tile.entityAi
-      if entity then
-        boardTile.entity[entity] = entity
-        if ai then
-          Runtime:addEventListener(
-            "enterFrame",
-            function()
-              ai(entity)
-            end
-          )
-        end
-      end
-    end
-  end
-end
+board = tClasses.board:new(tLevels[1])
+board:render()
 
 --Render player
-player = tClasses.entity.player:new(board.spawnColumn, board.spawnRow, board.container)
+tClasses.entity.player:new(board.spawnColumn, board.spawnRow, board.container) --player:new is assigned to _G.player internally
 
 --[[------------------------------------------------------------------------------
 Interactivity

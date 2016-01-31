@@ -4,11 +4,52 @@
 local class = {}
 
 --Private properties
-local motionQueue = {
+--motion handler
+local motionQueue = { --order dependent
+  size = 0,
   ids = {
     
   }
 }
+Runtime:addEventListener(
+  "enterFrame",
+  function()
+    if motionQueue.size > 0 then
+      local queue = motionQueue
+      motionQueue = { --create new queue
+        size = 0,
+        ids = {
+          
+        }
+      }
+      for i = 1,queue.size do  --process current queue
+        local motion = queue[i]
+        if motion then
+          motionQueue[i] = nil
+          motionQueue.ids[motion.id] = nil
+          local entity = motion.entity
+          if motion.func then
+            motion.func(entity)
+          end
+          entity:calculateMotion()
+        end
+      end
+    end
+  end
+)
+
+--ai handler
+local tAi = {
+  
+}
+Runtime:addEventListener(
+  "enterFrame",
+  function()
+    for k,v in pairs(tAi) do
+      v(k)
+    end
+  end
+)
 
 --Public properties
 class.objMt = {__index = class} --metatable for created objects
@@ -21,25 +62,9 @@ class.height = tileHeight/2
 class.width = tileWidth/2
 class.pushable = false
 
-Runtime:addEventListener(
-  "enterFrame",
-  function()
-    for i=1,#motionQueue do
-      local motion = table.remove(motionQueue,1)
-      local entity = motion.entity
-      motionQueue.ids[motion.id] = nil
-      if motion.func then
-        motion.func(entity)
-      end
-      entity:calculateMotion()
-    end
-  end
-)
-
 --Class methods
 function class:new(nColumn, nRow, parent)
-  local obj
-  obj = {
+  local obj = {
     --instance properties
     disp = self.height and self.width and display.newImageRect(self.texture, self.height, self.width) or display.newImage(self.texture),
     inventory = {},
@@ -62,18 +87,31 @@ function class:inherit()
 end
 
 --Public methods
+--motion
 function class:queueMotion(fMotion, id)
-  id = id or fMotion or self
-  if motionQueue.ids[id] then
+  id = id or self
+  if motionQueue.ids[id] and (not fMotion or fMotion == motionQueue.ids[id].func) then
     return
   end
+  motionQueue.size = motionQueue.size+1
   local tMotion = {
     func = fMotion,
     id = id,
     entity = self,
+    num = motionQueue.size
   }
   motionQueue.ids[id] = tMotion
-  table.insert(motionQueue, tMotion)
+  motionQueue[motionQueue.size] = tMotion
+end
+
+function class:removeMotion(id)
+  id = id or self
+  local motion = motionQueue.ids[id]
+  if motion then
+    motionQueue.ids[id] = nil
+    motionQueue[motion.num] = nil
+    return motion
+  end
 end
 
 function class:calculateMotion()
@@ -218,6 +256,22 @@ function class:moveTowards(targetX, targetY)
   self:control(motionX,motionY)
 end  
 
+--ai
+function class:hookAi(fAi)
+  tAi[self] = fAi
+end
+
+function class:die()
+  self.tile.entity[self] = nil
+  self.tile = nil
+  self.disp:removeSelf()
+  self.disp = nil
+  self:removeMotion()
+  tAi[self] = nil
+  --inventory cleanup must be implemented!
+end
+
+--items
 function class:addItem(item,nAmount)
   nAmount = nAmount or item.pickup or 1
   for k,v in pairs(self.inventory) do
@@ -242,6 +296,7 @@ function class:addItem(item,nAmount)
   return true
 end
 
+--interaction
 class.interaction = {
   
 }

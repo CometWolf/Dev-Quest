@@ -5,7 +5,7 @@ local ai = {
     type = "bug",
     ai = function(entity)
       if trackedPlayer then
-        entity:moveTowards(math.random()*1000,math.random()*1000)
+        entity:die()
       else
         local playerDistX, playerDistY = entity:moveTowards(player)
         if entity.tile == player.tile then
