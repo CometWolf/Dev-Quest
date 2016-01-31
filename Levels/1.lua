@@ -1,11 +1,17 @@
 --AI file for level 1
+local trackedPlayer
 local ai = {
   b = {
     type = "bug",
     ai = function(entity)
-      entity.velocityX = entity.x > player.boardX and -1 or entity.x < player.boardX and 1 or 0
-      entity.velocityY = entity.y > player.boardY and -1 or entity.y < player.boardY and 1 or 0
-      entity:queueMotion()
+      if trackedPlayer then
+        entity:moveTowards(math.random()*1000,math.random()*1000)
+      else
+        local playerDistX, playerDistY = entity:moveTowards(player)
+        if entity.tile == player.tile then
+          trackedPlayer = true
+        end
+      end
     end
   },
   s = {

@@ -27,6 +27,7 @@ function class:new(nColumn, nRow, parent)
   return obj
 end
 
+local baseMove = class.move --Used in the override function
 function class:move(nX, nY, bAbsolute)
   if not bAbsolute then
     nX = nX and nX ~= 0 and self.boardX+nX
@@ -42,22 +43,18 @@ function class:move(nX, nY, bAbsolute)
   if groupX or groupY  then
     self.disp.x = groupX and board.view.middleX or self.disp.x
     self.disp.y = groupY and board.view.middleY or self.disp.y
-    transition.moveTo(
-      board.group,
-      {
-        x = groupX,
-        y = groupY,
-        time = self.moveTime, 
-        onComplete = self.computePhysics
-      }
-    )
     if not groupX then
-      self:motion(nX,nil,true)
+      board.group.y = groupY
+      baseMove(self,nX,nil,true)
     elseif groupX and not groupY then
-      self:motion(nil,nY,true)
+      board.group.x = groupX
+      baseMove(self,nil,nY,true)
+    else
+      board.group.x = groupX
+      board.group.y = groupY
     end
   else
-    self:motion(nX,nY,true)
+    baseMove(self,nX,nY,true)
   end
   self.boardX = nX and nX or self.boardX
   self.boardY = nY and nY or self.boardY

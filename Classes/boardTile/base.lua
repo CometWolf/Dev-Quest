@@ -51,8 +51,8 @@ function class:entityInteraction(interactingEntity,motionX,motionY) --handles en
       local action = interactingEntity.interaction[interactedEntity.type] or interactingEntity.interaction.any
       local reaction = interactedEntity.reaction[interactingEntity.type] or interactedEntity.reaction.any
       if action or reaction then
-        local interactingX =interactingEntity.boardX or interactingEntity.disp.x
-        local interactingY =interactingEntity.boardY or interactingEntity.disp.y
+        local interactingX = (interactingEntity.boardX or interactingEntity.disp.x)+motionX
+        local interactingY = (interactingEntity.boardY or interactingEntity.disp.y)+motionY
         local interactedX = interactedEntity.boardX  or interactedEntity.disp.x
         local interactedY = interactedEntity.boardY  or interactedEntity.disp.y
         if (
@@ -73,8 +73,6 @@ function class:entityInteraction(interactingEntity,motionX,motionY) --handles en
               allowMotion = false
             end
           end
-          interactingEntity:queueMotion()
-          interactedEntity:queueMotion()
         end
       end
     end

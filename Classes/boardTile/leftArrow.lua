@@ -8,7 +8,7 @@ class.objMt = {__index = class}
 class.texture = tImages.arrowTile
 class.type = "arrow"
 class.char = "<"
-class.friction = 0
+class.friction = 2
 
 --Public methods 
 function class:new(nColumn, nRow, parent)
@@ -19,10 +19,20 @@ function class:new(nColumn, nRow, parent)
 end
 
 function class:enter(entity,nMotionX,nMotionY)
-  entity.accelerationX = -1
-  --entity.accelerationY = 0
+  entity.accelerationX = -2
+  entity.accelerationY = 0
   return true
 end
-class.inside = class.enter
+
+function class:inside(entity,nMotionX,nMotionY)
+  entity.velocityX = -2
+  return true
+end
+
+local exitBoost = math.round(tileWidth/2)
+function class:leave(entity, nMotionX, nMotionY)
+  entity.velocityX = entity.velocityX-(nMotionX < 0 and exitBoost or 0)
+  return true
+end
 
 return class

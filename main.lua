@@ -295,42 +295,36 @@ Interactivity
 buttonAPI.hold(
   gui.controlLeft.button1,
   function()
-    player.velocityY = player.velocityY-player.speed
-    player:queueMotion()
+    player:control(nil,-player.speed)
   end
 )
 buttonAPI.hold(
   gui.controlLeft.button2,
   function()
-    player.velocityX = player.velocityX-player.speed
-    player:queueMotion()
+    player:control(-player.speed)
   end
 )
 buttonAPI.hold(
   gui.controlLeft.button3,
   function()
-    player.velocityY = player.velocityY+player.speed
-    player:queueMotion()
+    player:control(nil,player.speed)
   end
 )
 buttonAPI.hold(
   gui.controlRight.button1,
   function()
-    player.velocityY = player.velocityY-player.speed
-    player:queueMotion()
+    player:control(nil,-player.speed)
   end
 )
 buttonAPI.hold(
   gui.controlRight.button2,
   function()
-    player.velocityX = player.velocityX+player.speed
-    player:queueMotion()
+    player:control(player.speed)
   end
 )
 buttonAPI.hold(
   gui.controlRight.button3,
   function()
-    player.velocityY = player.velocityY+player.speed
-    player:queueMotion()
+    player:control(nil,player.speed)
   end
 )
