@@ -66,7 +66,7 @@ end
 
 function class:render()
   --calculate view portion
-  local width = screen.width-gui.controlLeft.width-gui.controlRight.width
+  local width = screen.width
   local height = screen.height-gui.statusBar.height
   local columns = math.floor(width/tileWidth)
   local rows = math.floor(height/tileHeight)
@@ -74,7 +74,7 @@ function class:render()
   local unusedY = math.floor(height%(tileHeight))
   self.container = display.newContainer(tileWidth*columns, tileHeight*rows)
   self.container:toBack()
-  self.container.x = gui.controlLeft.edgeX+math.floor(unusedX/2)
+  self.container.x = math.floor(unusedX/2)
   self.container.y = gui.statusBar.bottomY+math.floor(unusedY/2)
   self.container.anchorChildren = false
   self.view = {

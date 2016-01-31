@@ -21,6 +21,8 @@ screen = {}
 do
   screen.width = display.contentWidth
   screen.height = display.contentHeight
+  screen.middleX = screen.width*0.5
+  screen.middleY = screen.height*0.5
   local inchInMm = 25.4
   local pointsPerInch = 163
   local pointsPerMm = pointsPerInch/25.4
@@ -138,42 +140,11 @@ do
   gui.statusBar.anchorChildren = false
   gui.statusBar.background = display.newRect(gui.statusBar, 0, 0, screen.width, statusBarHeight)
   gui.statusBar.bottomY = gui.statusBar.y+statusBarHeight
---side control bars
-  local controlWidth = math.floor(screen.mmToPoints(10))
-  local controlHeight = screen.height-gui.statusBar.bottomY
-
-  gui.controlLeft = display.newContainer(controlWidth, controlHeight)
-  gui.controlLeft.x = 0
-  gui.controlLeft.y = gui.statusBar.bottomY
-  gui.controlLeft.edgeX = gui.controlLeft.x+gui.controlLeft.width
-  gui.controlLeft.anchorChildren = false
-  gui.controlLeft.background = display.newRect(gui.controlLeft, 0, 0, controlWidth, controlHeight)
-
-  gui.controlRight = display.newContainer(controlWidth,controlHeight)
-  gui.controlRight.x = screen.width-controlWidth
-  gui.controlRight.y = gui.statusBar.bottomY
-  gui.controlRight.anchorChildren = false
-  gui.controlRight.background = display.newRect(gui.controlRight, 0, 0, controlWidth, controlHeight)
-
---buttons
-  local buttonHeight = screen.mmToPoints(12)
-  local buttonWidth = screen.mmToPoints(8)
-  local buttonX = math.round(controlWidth/2)
-  local buttonOffsetY = buttonHeight+screen.mmToPoints(3)
-  local controlMiddle = math.round(controlHeight/2)
-  local buttonFirstY = controlMiddle-buttonOffsetY
-  for _i,side in ipairs({gui.controlLeft,gui.controlRight}) do
-    for i=0,2 do
-      local button = display.newRoundedRect(side, buttonX, buttonFirstY+buttonOffsetY*i, buttonWidth, buttonHeight, 5)
-      button.fill = {
-        type = "image",
-        filename = tImages.rightArrow,
-      }
-      button.anchorX = 0.5
-      button.anchorY = 0.5
-      side["button"..i+1] = button
-    end
-  end
+  
+--Player control touch overlay
+  gui.controlOverlay = display.newRect(0, 0, screen.width, screen.height)
+  gui.controlOverlay.isVisible = false
+  gui.controlOverlay.isHitTestable = true
   gui.statusBar:toFront()
 end
 
@@ -185,44 +156,47 @@ board = tClasses.board:new(tLevels[1])
 board:render()
 
 --Render player
-tClasses.entity.player:new(board.spawnColumn, board.spawnRow, board.container) --player:new is assigned to _G.player internally
+player = tClasses.entity.player:new(board.spawnColumn, board.spawnRow, board) --player:new is assigned to _G.player internally
 
 --[[------------------------------------------------------------------------------
 Interactivity
 --------------------------------------------------------------------------------]]
-buttonAPI.hold(
-  gui.controlLeft.button1,
-  function()
-    player:control(nil,-player.speed)
-  end
-)
-buttonAPI.hold(
-  gui.controlLeft.button2,
-  function()
-    player:control(-player.speed)
-  end
-)
-buttonAPI.hold(
-  gui.controlLeft.button3,
-  function()
-    player:control(nil,player.speed)
-  end
-)
-buttonAPI.hold(
-  gui.controlRight.button1,
-  function()
-    player:control(nil,-player.speed)
-  end
-)
-buttonAPI.hold(
-  gui.controlRight.button2,
-  function()
-    player:control(player.speed)
-  end
-)
-buttonAPI.hold(
-  gui.controlRight.button3,
-  function()
-    player:control(nil,player.speed)
-  end
-)
+do
+  local yOffset = gui.statusBar.contentHeight/2
+  local middleX, middleY = screen.middleX, screen.middleY+yOffset
+  local playerSpeed = player.speed
+  local x,y = 0,0
+  local controlled
+  gui.controlOverlay:addEventListener(
+    "touch",
+    function(event)
+      x = (event.x-middleX)/middleX
+      y = (event.y-middleY)/middleY
+      
+      if x > 0.25 then
+        x = (x <= 0.7 and x + 0.7 or 1)*playerSpeed
+      elseif x < -0.25 then
+        x = (x >= -0.7 and x - 0.7 or -1)*playerSpeed
+      else
+        x = x*playerSpeed*2.8
+      end
+      
+      if y > 0.25 then
+        y = (y <= 0.7 and y + 0.7 or 1)*playerSpeed
+      elseif y < -0.25 then
+        y = (y >= -0.7 and y - 0.7 or -1)*playerSpeed
+      else
+        y = y*playerSpeed*2.8
+      end
+      
+      controlled = event.phase ~= "ended"
+    end
+  )
+  player:hookAi(
+    function(entity)
+      if controlled then
+        entity:control(x*playerSpeed,y*playerSpeed)
+      end
+    end
+  )
+end
