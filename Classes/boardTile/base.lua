@@ -8,7 +8,6 @@ class.objMt = {__index = class} --metatable for created objects
 class.width = tileWidth
 class.height = tileHeight
 class.friction = 1
-class.traction = 1
 
 --Class methods
 function class:new(nColumn, nRow, parent)

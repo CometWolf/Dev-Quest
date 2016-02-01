@@ -13,26 +13,16 @@ class.traction = 0
 
 --Public methods
 function class:enter(entity, nMotionX, nMotionY)
-  if not entity.grip then
-    entity.iceSlipX = entity.accelerationX == 0 and nMotionX or entity.accelerationX
-    entity.iceSlipY = entity.accelerationY == 0 and nMotionY or entity.accelerationY
-    entity.accelerationX = entity.iceSlipX
-    entity.accelerationY = entity.iceSlipY
-  end
-  return true
-end
-
-function class:inside(entity, nMotionX, nMotionY)
-  if not entity.grip then
-    entity.accelerationX = entity.iceSlipX
-    entity.accelerationY = entity.iceSlipY
+  if not entity.iceSkates then
+    entity.grip = 0
+    entity.accelerationX = entity.accelerationX == 0 and nMotionX or entity.accelerationX
+    entity.accelerationY = entity.accelerationY == 0 and nMotionY or entity.accelerationY
   end
   return true
 end
 
 function class:leave(entity, nMotionX, nMotionY)
-  entity.iceSlipY = nil
-  entity.iceSlipX = nil
+  entity.grip = entity.defaultGrip
   return true
 end
 

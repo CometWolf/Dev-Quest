@@ -61,6 +61,7 @@ class.accelerationY = 0
 class.height = tileHeight/2
 class.width = tileWidth/2
 class.pushable = false
+class.grip = 1
 
 --Class methods
 function class:new(nColumn, nRow, parent)
@@ -72,6 +73,7 @@ function class:new(nColumn, nRow, parent)
     row = nRow,
     tile = board[nColumn][nRow],
   }
+  obj.defaultGrip = obj.grip
   obj.disp.x = (nColumn-1)*tileWidth+tileWidth*0.5
   obj.disp.y = (nRow-1)*tileHeight+tileHeight*0.5
   obj.disp.anchorX = 0.5
@@ -210,7 +212,7 @@ end
 
 function class:control(nX,nY)
   if nX and nX ~= 0 then
-    nX = nX*self.tile.traction
+    nX = nX*self.grip
     local velX = self.velocityX
     if velX > 0 then
       self.velocityX = nX > 0 and (nX > velX and nX or velX) or velX+nX
@@ -221,7 +223,7 @@ function class:control(nX,nY)
     end
   end
   if nY and nY ~= 0 then
-    nY=nY*self.tile.traction
+    nY=nY*self.grip
     local velY = self.velocityY
     if velY > 0 then
       self.velocityY = nY > 0 and (nY > velY and nY or velY) or velY+nY
