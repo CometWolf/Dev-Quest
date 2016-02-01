@@ -8,6 +8,7 @@ class.objMt = {__index = class} --metatable for created objects
 class.width = tileWidth
 class.height = tileHeight
 class.friction = 1
+class.traction = 1
 
 --Class methods
 function class:new(nColumn, nRow, parent)
@@ -16,7 +17,7 @@ function class:new(nColumn, nRow, parent)
     column = nColumn,
     row = nRow,
     entity = { --table listing entities on the tile
-      
+
     },
   }
   obj.disp.x = (nColumn-1)*self.width
@@ -60,7 +61,7 @@ function class:entityInteraction(interactingEntity,motionX,motionY) --handles en
           and interactingX + interactingEntity.disp.contentWidth > interactedX
           and interactingY < interactedY + interactedEntity.disp.contentHeight
           and interactingY + interactingEntity.disp.contentHeight > interactedY
-          ) 
+          )
         then
           local res
           if action then

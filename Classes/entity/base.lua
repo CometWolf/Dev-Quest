@@ -8,7 +8,7 @@ local class = {}
 local motionQueue = { --order dependent
   size = 0,
   ids = {
-    
+
   }
 }
 Runtime:addEventListener(
@@ -19,7 +19,7 @@ Runtime:addEventListener(
       motionQueue = { --create new queue
         size = 0,
         ids = {
-          
+
         }
       }
       for i = 1,queue.size do  --process current queue
@@ -40,7 +40,7 @@ Runtime:addEventListener(
 
 --ai handler
 local tAi = {
-  
+
 }
 Runtime:addEventListener(
   "enterFrame",
@@ -200,7 +200,7 @@ function class:move(nX, nY, bAbsolute)
     nX = nX ~= self.disp.x and nX
     nY = nY ~= self.disp.y and nY
   end
-  if nX then 
+  if nX then
     self.disp.x = nX
   end
   if nY then
@@ -208,10 +208,11 @@ function class:move(nX, nY, bAbsolute)
   end
 end
 
-function class:control(nX,nY) 
+function class:control(nX,nY)
   if nX and nX ~= 0 then
+    nX = nX*self.tile.traction
     local velX = self.velocityX
-    if velX > 0 then 
+    if velX > 0 then
       self.velocityX = nX > 0 and (nX > velX and nX or velX) or velX+nX
     elseif velX < 0 then
       self.velocityX = nX < 0 and (nX < velX and nX or velX) or velX+nX
@@ -220,8 +221,9 @@ function class:control(nX,nY)
     end
   end
   if nY and nY ~= 0 then
+    nY=nY*self.tile.traction
     local velY = self.velocityY
-    if velY > 0 then 
+    if velY > 0 then
       self.velocityY = nY > 0 and (nY > velY and nY or velY) or velY+nY
     elseif velY < 0 then
       self.velocityY = nY < 0 and (nY < velY and nY or velY) or velY+nY
@@ -254,7 +256,7 @@ function class:moveTowards(targetX, targetY)
     or distY < 0 and (-self.speed >= distY and -self.speed or distY)
   )
   self:control(motionX,motionY)
-end  
+end
 
 --ai
 function class:hookAi(fAi)
@@ -298,7 +300,7 @@ end
 
 --interaction
 class.interaction = {
-  
+
 }
 
 class.reaction = {

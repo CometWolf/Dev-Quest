@@ -9,15 +9,31 @@ class.texture = tImages.iceTile
 class.type = "ice"
 class.char = "i"
 class.friction = 0
+class.traction = 0
 
---Public methods 
-function class:enter(entity,nMotionX,nMotionY)
+--Public methods
+function class:enter(entity, nMotionX, nMotionY)
   if not entity.grip then
-    entity.accelerationX = entity.accelerationX == 0 and (nMotionX > 0 and 1 or nMotionX < 0 and -1) or entity.accelerationX
-    entity.accelerationY = entity.accelerationY == 0 and (nMotionY > 0 and 1 or nMotionY < 0 and -1) or entity.accelerationY
+    entity.iceSlipX = entity.accelerationX == 0 and nMotionX or entity.accelerationX
+    entity.iceSlipY = entity.accelerationY == 0 and nMotionY or entity.accelerationY
+    entity.accelerationX = entity.iceSlipX
+    entity.accelerationY = entity.iceSlipY
   end
   return true
 end
-class.inside = class.enter
+
+function class:inside(entity, nMotionX, nMotionY)
+  if not entity.grip then
+    entity.accelerationX = entity.iceSlipX
+    entity.accelerationY = entity.iceSlipY
+  end
+  return true
+end
+
+function class:leave(entity, nMotionX, nMotionY)
+  entity.iceSlipY = nil
+  entity.iceSlipX = nil
+  return true
+end
 
 return class
